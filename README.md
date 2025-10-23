@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Career Reach Hub
 
 Welcome to Career Reach Hub - Your Gateway to Professional Growth
