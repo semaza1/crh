@@ -10,7 +10,7 @@ import {
 
 import Kayitare from '../../assets/team_members/kayitare.jpg';
 import Jackson from '../../assets/team_members/jackson.jpg';
-import Hodali from '../../assets/team_members/hodali.jpg';
+import Hodali from '../../assets/team_members/Hodali.jpg';
 import JohnKelly from '../../assets/team_members/johnKelly.jpg';
 import Natasha from '../../assets/team_members/natasha.jpg';
 import Steven from '../../assets/team_members/steven.jpg';
