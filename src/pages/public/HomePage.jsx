@@ -148,7 +148,7 @@ const HomePage = () => {
       linkedin: 'https://linkedin.com/in/elishasteven'
     },
     {
-      name: 'Ishimwe Pacific',
+      name: 'Ishimwe Denis Pacifique',
       role: 'Partnerships Manager',
       image: Pacific,
       email: 'ishimwe@brandeis.edu',
