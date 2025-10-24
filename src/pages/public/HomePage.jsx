@@ -228,7 +228,7 @@ const HomePage = () => {
         {/* Hero Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <h1 className="text-5xl md:text-7xl font-extrabold mb-6 animate-fade-in">
-            Welcome to <span className="text-blue-400">Career Connect Hub</span>
+            Welcome to <span className="text-blue-400">Career Reach Hub</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-gray-200">
             Your gateway to quality education, career resources, and professional guidance. Transform your career today.
