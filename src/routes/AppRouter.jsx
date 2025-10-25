@@ -22,6 +22,7 @@ import CoursesPage from '../pages/admin/ManageCourses';
 import ResourcesPage from '../pages/admin/ManageResources';
 import UserPage from '../pages/admin/ManageUsers';
 import LessonsPage from '../pages/admin/ManageLesson';
+import EnrollmentsPage from '../pages/admin/ManageEnrollments';
 
 // 404 Page
 import NotFound from '../pages/NotFound';
@@ -122,6 +123,15 @@ export const AppRouter = () => {
             }
           />
 
+          {/* Manage Enrollments */}
+          <Route
+            path="/admin/enrollments"
+            element={
+              <ProtectedRoute requireAdmin>
+                <EnrollmentsPage />
+              </ProtectedRoute>
+            }
+          />
           {/* Manage Lesson */}
           <Route
             path="/admin/courses/:courseId/lessons"
