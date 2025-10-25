@@ -225,7 +225,10 @@ const HomePage = () => {
         <div className="absolute inset-0 z-0">
           <video
             className="w-full h-full object-cover"
-            src={Hero_video}></video>
+            src={Hero_video}
+            autoPlay = "true"
+            loop = "true"
+            ></video>
           <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-purple-900/90"></div>
         </div>
 
