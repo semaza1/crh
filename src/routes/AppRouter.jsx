@@ -15,6 +15,7 @@ import CourseDetailPage from '../pages/user/CourseDetailPage';
 import LessonPage from '../pages/user/LessonPage';
 import PaymentPage from '../pages/user/PaymentPage';
 import Resource from '../pages/user/Resources';
+import Profile from '../pages/user/ProfilePage';
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -89,6 +90,14 @@ export const AppRouter = () => {
             element={
               <ProtectedRoute>
                 <Resource />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/profile/"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />
