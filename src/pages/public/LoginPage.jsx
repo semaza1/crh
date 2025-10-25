@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { BookOpen, Mail, Lock, AlertCircle } from 'lucide-react';
+import Logo from '../../assets/Logo.png';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -58,9 +59,7 @@ const LoginPage = () => {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-blue-600 p-3 rounded-xl">
-              <BookOpen className="h-8 w-8 text-white" />
-            </div>
+            <img src={Logo} alt="CRH Logo" className="h-20 w-20 rounded-full" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
           <p className="mt-2 text-gray-600">Sign in to CRH</p>

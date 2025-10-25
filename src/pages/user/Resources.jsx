@@ -8,6 +8,8 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
+import Logo from '../../assets/Logo.png';
+
 const ResourcesPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -134,7 +136,7 @@ const ResourcesPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <BookOpen className="h-8 w-8 text-purple-600" />
+              <img src={Logo} alt="CRH Logo" className="h-12 w-12 rounded-full" />
               <span className="ml-2 text-xl font-bold text-gray-900">CRH Learning</span>
             </div>
             <div className="flex items-center hover:text-purple-600">
@@ -428,7 +430,7 @@ const ResourcesPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center mb-4 md:mb-0">
-              <BookOpen className="h-6 w-6 text-purple-500" />
+              <img src={Logo} alt="CRH Logo" className="h-12 w-12 rounded-full" />
               <span className="ml-2 text-lg font-bold">Career Connect Hub</span>
             </div>
             <div className="flex gap-6 text-sm text-gray-400">

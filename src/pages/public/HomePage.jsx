@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  BookOpen, Users, Award, ArrowRight, Play, Clock, Star,
+  BookOpen, Users, Award, ArrowRight, Play, Clock, Star, X,
   Download, FileText, Video, Quote, Mail, Phone, MapPin, Instagram,
   Linkedin, Twitter, Facebook, TrendingUp, Target, Heart, CheckCircle, Youtube
 } from 'lucide-react';
@@ -183,6 +183,8 @@ const HomePage = () => {
     }
   ];
 
+  const [showModal, setShowModal] = useState(false);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -221,59 +223,80 @@ const HomePage = () => {
 
       {/* Hero Section with Background Video */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Video */}
-        <div className="absolute inset-0 z-0">
-          <video
-            className="w-full h-full object-cover"
-            src={Hero_video}
-            autoPlay = "true"
-            loop = "true"
+      {/* Background Video */}
+      <div className="absolute inset-0 z-0">
+        <video
+          className="w-full h-full object-cover"
+          src={Hero_video}
+          muted
+          loop
+          autoPlay
+        ></video>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-purple-900/90"></div>
+      </div>
+
+      {/* Hero Content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 animate-fade-in">
+          Welcome to <span className="text-blue-400">Career Reach Hub</span>
+        </h1>
+        <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-gray-200">
+          Your gateway to quality education, career resources, and professional guidance. Transform your career today.
+        </p>
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <Link
+            to="/signup"
+            className="flex items-center justify-center px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all transform hover:scale-105"
+          >
+            Get Started Free
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Link>
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center justify-center px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white rounded-lg font-semibold hover:bg-white/20 transition-all"
+          >
+            <Play className="mr-2 h-5 w-5" />
+            Watch Demo
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto">
+          <div>
+            <div className="text-4xl font-bold text-blue-400">500+</div>
+            <div className="text-sm text-gray-300 mt-1">Active Students</div>
+          </div>
+          <div>
+            <div className="text-4xl font-bold text-blue-400">50+</div>
+            <div className="text-sm text-gray-300 mt-1">Expert Courses</div>
+          </div>
+          <div>
+            <div className="text-4xl font-bold text-blue-400">95%</div>
+            <div className="text-sm text-gray-300 mt-1">Success Rate</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Video Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="relative w-11/12 md:w-3/4 lg:w-1/2 rounded-2xl overflow-hidden shadow-lg">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 z-10 text-white hover:text-gray-300"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <video
+              src={Hero_video}
+              controls
+              autoPlay
+              className="w-full h-auto"
             ></video>
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-purple-900/90"></div>
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 animate-fade-in">
-            Welcome to <span className="text-blue-400">Career Reach Hub</span>
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-gray-200">
-            Your gateway to quality education, career resources, and professional guidance. Transform your career today.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link
-              to="/signup"
-              className="flex items-center justify-center px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all transform hover:scale-105"
-            >
-              Get Started Free
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-            <a
-              href="#courses"
-              className="flex items-center justify-center px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white rounded-lg font-semibold hover:bg-white/20 transition-all"
-            >
-              <Play className="mr-2 h-5 w-5" />
-              Watch Demo
-            </a>
-          </div>
-
-          {/* Stats */}
-          <div className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto">
-            <div>
-              <div className="text-4xl font-bold text-blue-400">500+</div>
-              <div className="text-sm text-gray-300 mt-1">Active Students</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-blue-400">50+</div>
-              <div className="text-sm text-gray-300 mt-1">Expert Courses</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-blue-400">95%</div>
-              <div className="text-sm text-gray-300 mt-1">Success Rate</div>
-            </div>
           </div>
         </div>
-      </section>
+      )}
+    </section>
 
       {/* About Us Section */}
       <section className="py-24 bg-gradient-to-b from-white to-gray-50 font-inter">
