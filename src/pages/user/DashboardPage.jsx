@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { BookOpen, GraduationCap, Bell, LogOut, User as UserIcon, Home } from 'lucide-react';
 
+import Logo from '../../assets/Logo.png';
+
 const DashboardPage = () => {
   const { user, userProfile, signOut, isAdmin } = useAuth();
   const [enrollments, setEnrollments] = useState([]);
@@ -96,7 +98,7 @@ const DashboardPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <BookOpen className="h-8 w-8 text-blue-600" />
+              <img src={Logo} alt="CRH Logo" className="h-8 w-8" />
               <span className="ml-2 text-xl font-bold text-gray-900">CRH</span>
             </div>
             <div className="flex items-center space-x-4">
@@ -227,7 +229,10 @@ const DashboardPage = () => {
                   key={enrollment.id}
                   className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                 >
-                  <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-32"></div>
+                  <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-32">
+                    {/* Course image */}
+                    <img src={enrollment.courses?.thumbanail_url} alt={enrollment.courses?.title} className="w-full h-32 object-cover" />
+                  </div>
                   <div className="p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       {enrollment.courses?.title || 'Untitled Course'}
