@@ -22,7 +22,7 @@ import CoursesPage from '../pages/admin/ManageCourses';
 import ResourcesPage from '../pages/admin/ManageResources';
 import UserPage from '../pages/admin/ManageUsers';
 import LessonsPage from '../pages/admin/ManageLesson';
-import EnrollmentsPage from '../pages/admin/ManageEnrollments';
+import EnrollmentsPage from '../pages/admin/ManageEnrollmentsPage';
 
 // 404 Page
 import NotFound from '../pages/NotFound';
