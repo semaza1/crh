@@ -21,6 +21,8 @@ import Emmanuel from '../../assets/team_members/emmanuel.png';
 import Image from '../../assets/place_of_work.jpg';
 import Logo from '../../assets/Logo.png';
 
+import Hero_video from '../../assets/Career Reach Hub.mp4';
+
 const HomePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -221,7 +223,9 @@ const HomePage = () => {
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         {/* Background Video */}
         <div className="absolute inset-0 z-0">
-          <img src={Image} alt="Workplace" className="w-full h-full object-cover brightness-75" />
+          <video
+            className="w-full h-full object-cover"
+            src={Hero_video}></video>
           <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-purple-900/90"></div>
         </div>
 
@@ -280,7 +284,7 @@ const HomePage = () => {
               </h2>
               
               <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-                Founded in 2020, <span className="text-blue-600 font-semibold">Career Reach Hub</span> has been
+                Founded in 2022, <span className="text-blue-600 font-semibold">Career Reach Hub</span> has been
                 dedicated to connecting ambitious individuals with life-changing opportunities. 
                 We believe that everyone deserves access to quality mentorship, meaningful internships,
                 and transformative career experiences.
