@@ -142,7 +142,7 @@ const HomePage = () => {
       linkedin: 'https://linkedin.com/in/natashaaragarwal'
     },
     {
-      name: 'Elisha Steven',
+      name: 'TUMUSIIME Elisha Steven',
       role: 'Marketing Operations Officer',
       image: Steven,
       email: 'elishatumusiime@gmail.com',
