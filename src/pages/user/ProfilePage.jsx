@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  User, Mail, Phone, MapPin, Calendar, Camera, Save, 
+  User, Mail, Phone, Tag, Save, 
   Check, AlertCircle, Lock, Edit2, X, BookOpen, Award,
   TrendingUp, Clock
 } from 'lucide-react';
@@ -11,8 +11,8 @@ import {
 const ProfilePage = () => {
   const { userProfile, setUserProfile } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [stats, setStats] = useState({
     enrolledCourses: 0,
@@ -22,19 +22,14 @@ const ProfilePage = () => {
   });
 
   const [formData, setFormData] = useState({
-    full_name: '',
+    name: '',
     email: '',
     phone: '',
-    bio: '',
-    location: '',
-    avatar_url: '',
-    date_of_birth: '',
-    occupation: '',
-    website: ''
+    interests: '',
+    role: 'user'
   });
 
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
@@ -52,29 +47,29 @@ const ProfilePage = () => {
 
   const loadProfile = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*')
         .eq('id', userProfile.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
 
       if (data) {
         setFormData({
-          full_name: data.full_name || '',
+          name: data.name || '',
           email: data.email || '',
           phone: data.phone || '',
-          bio: data.bio || '',
-          location: data.location || '',
-          avatar_url: data.avatar_url || '',
-          date_of_birth: data.date_of_birth || '',
-          occupation: data.occupation || '',
-          website: data.website || ''
+          interests: data.interests || '',
+          role: data.role || 'user'
         });
       }
     } catch (error) {
       console.error('Error loading profile:', error);
+      showMessage('error', 'Failed to load profile');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,7 +109,7 @@ const ProfilePage = () => {
       setStats({
         enrolledCourses: enrolledCount,
         completedCourses: completedCount,
-        totalLearningTime: enrolledCount * 8, // Estimate
+        totalLearningTime: enrolledCount * 8,
         certificates: completedCount
       });
     } catch (error) {
@@ -127,51 +122,20 @@ const ProfilePage = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleAvatarUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      setLoading(true);
-
-      // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${userProfile.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      setFormData({ ...formData, avatar_url: publicUrl });
-      showMessage('success', 'Avatar uploaded successfully!');
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      showMessage('error', 'Failed to upload avatar');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
 
     try {
       const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: userProfile.id,
-          ...formData,
+        .from('users')
+        .update({
+          name: formData.name,
+          phone: formData.phone,
+          interests: formData.interests,
           updated_at: new Date().toISOString()
-        });
+        })
+        .eq('id', userProfile.id);
 
       if (error) throw error;
 
@@ -179,12 +143,11 @@ const ProfilePage = () => {
       setUserProfile({ ...userProfile, ...formData });
 
       showMessage('success', 'Profile updated successfully!');
-      setEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
       showMessage('error', 'Failed to update profile');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -201,7 +164,7 @@ const ProfilePage = () => {
       return;
     }
 
-    setLoading(true);
+    setSaving(true);
 
     try {
       const { error } = await supabase.auth.updateUser({
@@ -213,7 +176,6 @@ const ProfilePage = () => {
       showMessage('success', 'Password updated successfully!');
       setShowPasswordModal(false);
       setPasswordData({
-        currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
@@ -221,7 +183,7 @@ const ProfilePage = () => {
       console.error('Error updating password:', error);
       showMessage('error', error.message || 'Failed to update password');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -230,14 +192,13 @@ const ProfilePage = () => {
     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Not set';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -245,7 +206,7 @@ const ProfilePage = () => {
       <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <h1 className="text-4xl font-bold mb-2">My Profile</h1>
-          <p className="text-xl text-purple-100">Manage your account settings and preferences</p>
+          <p className="text-xl text-purple-100">Manage your account information</p>
         </div>
       </div>
 
@@ -275,36 +236,21 @@ const ProfilePage = () => {
               {/* Avatar */}
               <div className="text-center mb-6">
                 <div className="relative inline-block">
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-r from-purple-400 to-indigo-400 flex items-center justify-center text-white text-4xl font-bold overflow-hidden">
-                    {formData.avatar_url ? (
-                      <img
-                        src={formData.avatar_url}
-                        alt={formData.full_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span>{formData.full_name?.charAt(0) || 'U'}</span>
-                    )}
+                  <div className="w-32 h-32 rounded-full bg-gradient-to-r from-purple-400 to-indigo-400 flex items-center justify-center text-white text-4xl font-bold">
+                    <span>{formData.name?.charAt(0)?.toUpperCase() || 'U'}</span>
                   </div>
-                  {editing && (
-                    <label className="absolute bottom-0 right-0 w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-purple-700 transition-colors">
-                      <Camera className="h-5 w-5 text-white" />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mt-4">
-                  {formData.full_name || 'User'}
+                  {formData.name || 'User'}
                 </h2>
                 <p className="text-gray-600">{formData.email}</p>
-                {formData.occupation && (
-                  <p className="text-sm text-gray-500 mt-1">{formData.occupation}</p>
-                )}
+                <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${
+                  formData.role === 'admin' 
+                    ? 'bg-red-100 text-red-800' 
+                    : 'bg-blue-100 text-blue-800'
+                }`}>
+                  {formData.role === 'admin' ? 'Administrator' : 'Student'}
+                </span>
               </div>
 
               {/* Stats */}
@@ -312,7 +258,7 @@ const ProfilePage = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center text-gray-600">
                     <BookOpen className="h-5 w-5 mr-2" />
-                    <span className="text-sm">Courses</span>
+                    <span className="text-sm">Enrolled Courses</span>
                   </div>
                   <span className="font-bold text-gray-900">{stats.enrolledCourses}</span>
                 </div>
@@ -357,210 +303,146 @@ const ProfilePage = () => {
             <div className="bg-white rounded-lg shadow-sm p-8">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">Profile Information</h3>
-                {!editing ? (
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    <Edit2 className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setEditing(false);
-                      loadProfile();
-                    }}
-                    className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Cancel
-                  </button>
-                )}
+                <div className="flex items-center text-sm text-gray-500">
+                  <Edit2 className="h-4 w-4 mr-1" />
+                  All fields are editable
+                </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Personal Information */}
+                {/* Name Field */}
                 <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Full Name *
-                      </label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input
-                          type="text"
-                          name="full_name"
-                          required
-                          value={formData.full_name}
-                          onChange={handleInputChange}
-                          disabled={!editing}
-                          className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
-                          placeholder="John Doe"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email *
-                      </label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input
-                          type="email"
-                          name="email"
-                          required
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          disabled={!editing}
-                          className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
-                          placeholder="john@example.com"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Phone
-                      </label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          disabled={!editing}
-                          className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
-                          placeholder="+1 (555) 123-4567"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Date of Birth
-                      </label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input
-                          type="date"
-                          name="date_of_birth"
-                          value={formData.date_of_birth}
-                          onChange={handleInputChange}
-                          disabled={!editing}
-                          className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Location
-                      </label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input
-                          type="text"
-                          name="location"
-                          value={formData.location}
-                          onChange={handleInputChange}
-                          disabled={!editing}
-                          className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
-                          placeholder="City, Country"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Occupation
-                      </label>
-                      <input
-                        type="text"
-                        name="occupation"
-                        value={formData.occupation}
-                        onChange={handleInputChange}
-                        disabled={!editing}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
-                        placeholder="Software Developer"
-                      />
-                    </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name *
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Enter your full name"
+                    />
                   </div>
                 </div>
 
-                {/* Additional Information */}
-                <div className="border-t border-gray-200 pt-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Additional Information</h4>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Bio
-                      </label>
-                      <textarea
-                        name="bio"
-                        rows="4"
-                        value={formData.bio}
-                        onChange={handleInputChange}
-                        disabled={!editing}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
-                        placeholder="Tell us about yourself..."
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Website
-                      </label>
-                      <input
-                        type="url"
-                        name="website"
-                        value={formData.website}
-                        onChange={handleInputChange}
-                        disabled={!editing}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
-                        placeholder="https://yourwebsite.com"
-                      />
-                    </div>
+                {/* Email Field (Read-only) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address (Cannot be changed)
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      disabled
+                      className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                    />
                   </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Email cannot be changed for security reasons
+                  </p>
                 </div>
 
-                {editing && (
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditing(false);
-                        loadProfile();
-                      }}
-                      className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex-1 flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium disabled:opacity-50 transition-colors"
-                    >
-                      {loading ? (
-                        <>
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="h-5 w-5 mr-2" />
-                          Save Changes
-                        </>
-                      )}
-                    </button>
+                {/* Phone Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Enter your phone number"
+                    />
                   </div>
-                )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Optional - Add your contact number
+                  </p>
+                </div>
+
+                {/* Interests Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Interests
+                  </label>
+                  <div className="relative">
+                    <Tag className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <textarea
+                      name="interests"
+                      rows="4"
+                      value={formData.interests}
+                      onChange={handleInputChange}
+                      className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="What are you interested in learning? (e.g., Web Development, Data Science, Design)"
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Optional - Tell us what you're interested in learning
+                  </p>
+                </div>
+
+                {/* Role Field (Read-only) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Account Role (Cannot be changed)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.role === 'admin' ? 'Administrator' : 'Student'}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed capitalize"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Contact support to change your account role
+                  </p>
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium disabled:opacity-50 transition-colors"
+                  >
+                    {saving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Saving Changes...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-5 w-5 mr-2" />
+                        Save Changes
+                      </>
+                    )}
+                  </button>
+                </div>
               </form>
+
+              {/* Account Information */}
+              <div className="mt-8 pt-8 border-t border-gray-200">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-600 mb-1">Account ID</p>
+                    <p className="font-mono text-gray-900 text-xs">{userProfile.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 mb-1">Account Type</p>
+                    <p className="text-gray-900 capitalize">{formData.role}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -621,10 +503,10 @@ const ProfilePage = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={saving}
                   className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium disabled:opacity-50"
                 >
-                  {loading ? 'Updating...' : 'Update Password'}
+                  {saving ? 'Updating...' : 'Update Password'}
                 </button>
               </div>
             </form>
