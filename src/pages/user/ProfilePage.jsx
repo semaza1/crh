@@ -208,6 +208,13 @@ const ProfilePage = () => {
           <h1 className="text-4xl font-bold mb-2">My Profile</h1>
           <p className="text-xl text-purple-100">Manage your account information</p>
         </div>
+        {/* back to dashboard */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
+            <button onClick={() => navigate('/user/dashboard')} className="text-purple-200 hover:text-white flex items-center">
+                <X className="h-5 w-5 mr-1" />
+                Back to Dashboard
+            </button>
+        </div>    
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
