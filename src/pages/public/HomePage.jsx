@@ -106,7 +106,7 @@ const HomePage = () => {
       role: 'Resources & Finance Manager',
       image: Kayitare,
       email: 'habiyaremye.kayitare@gmail.com',
-      phone: '+250 781 882 027',
+      // phone: '+250 781 882 027',
       linkedin: 'https://linkedin.com/in/habiyaremye'
     },
     {
@@ -114,7 +114,7 @@ const HomePage = () => {
       role: 'Founder & CEO',
       image: Jackson,
       email: 'shyakamuhetojackson@gmail.com',
-      phone: '+250 794 395 653',
+      // phone: '+250 794 395 653',
       linkedin: 'https://www.linkedin.com/in/jackson-muheto-00220923b'
     },
     {
@@ -122,7 +122,7 @@ const HomePage = () => {
       role: 'Social Media & Communication officer',
       image: Hodali,
       email: 'nkurunzizahodar@gmail.com',
-      phone: '+1 (613) 617-4504',
+      // phone: '+1 (613) 617-4504',
       linkedin: 'https://linkedin.com/in/nkurunzizahodali'
     },
     {
@@ -130,7 +130,7 @@ const HomePage = () => {
       role: 'Co-Founder & Chief Operating Officer',
       image: JohnKelly,
       email: 'john@careerreachhub.com',
-      phone: '+1 (555) 456-7890',
+      // phone: '+1 (555) 456-7890',
       linkedin: 'https://linkedin.com/in/johnkelly'
     },
     {
@@ -138,7 +138,7 @@ const HomePage = () => {
       role: 'Finance & Planning Officer',
       image: Natasha,
       email: 'natashaa2099@gmail.com',
-      phone: '+1 (239) 564-8488',
+      // phone: '+1 (239) 564-8488',
       linkedin: 'https://linkedin.com/in/natashaaragarwal'
     },
     {
@@ -146,7 +146,7 @@ const HomePage = () => {
       role: 'Marketing Operations Officer',
       image: Steven,
       email: 'elishatumusiime@gmail.com',
-      phone: '+250 791 892 784',
+      // phone: '+250 791 892 784',
       linkedin: 'https://linkedin.com/in/elishasteven'
     },
     {
@@ -154,7 +154,7 @@ const HomePage = () => {
       role: 'Partnerships Manager',
       image: Pacific,
       email: 'ishimwe@brandeis.edu',
-      phone: '+1 (857) 961-6777',
+      // phone: '+1 (857) 961-6777',
       linkedin: 'https://linkedin.com/in/ishimwepacific'
     },
     {
@@ -162,7 +162,7 @@ const HomePage = () => {
       role: 'Chief Operating & Marketing officer',
       image: Eddy,
       email: 'eddymutoniwase@gmail.com',
-      phone: '+250 785 938 080',
+      // phone: '+250 785 938 080',
       linkedin: 'https://linkedin.com/in/eddymutoniwase'
     },
     {
@@ -170,7 +170,7 @@ const HomePage = () => {
       role: 'Resources & Finance Manager',
       image: Esther,
       email: 'esthermukakamanzi6@gmail.com',
-      phone: '+250789 115 408',
+      // phone: '+250789 115 408',
       linkedin: 'https://linkedin.com/in/esthermukakamanzi'
     },
     {
@@ -178,7 +178,7 @@ const HomePage = () => {
       role: 'Software Engineer',
       image: Emmanuel,
       email: 'semaza@asyv.org',
-      phone: '+250 798 721 418',
+      // phone: '+250 798 721 418',
       linkedin: 'https://linkedin.com/in/emmanuelsemaza'
     }
   ];
@@ -594,7 +594,7 @@ const HomePage = () => {
                       {member.email}
                     </a>
                   </div>
-                  <div className="flex items-center justify-center">
+                  {/* <div className="flex items-center justify-center">
                     <Phone className="w-4 h-4 mr-2 text-blue-500" />
                     <a
                       href={`tel:${member.phone}`}
@@ -602,7 +602,7 @@ const HomePage = () => {
                     >
                       {member.phone}
                     </a>
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* LinkedIn */}
