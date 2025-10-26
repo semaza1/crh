@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { 
   BookOpen, GraduationCap, Bell, LogOut, User as UserIcon, Home,
   TrendingUp, Award, Clock, PlayCircle, CheckCircle, Star,
-  Calendar, ArrowRight, BookMarked, Target, Zap
+  Calendar, ArrowRight, BookMarked, Target, Zap, Menu, X
 } from 'lucide-react';
 
 import Logo from '../../assets/Logo.png';
@@ -27,6 +27,7 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const hasFetched = useRef(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (user && userProfile && !hasFetched.current) {
@@ -250,43 +251,120 @@ const DashboardPage = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <nav className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <img src={Logo} alt="CRH Logo" className="h-12 w-12" />
-              <span className="ml-2 text-xl font-bold text-gray-900">CRH</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link to="/user/dashboard" className="text-blue-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                <Home className="h-4 w-4 mr-1" />
-                Dashboard
-              </Link>
-              <Link to="/user/course" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-                Courses
-              </Link>
-              <Link to="/user/resources/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-                Resources
-              </Link>
-              <Link to="/user/profile" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                <UserIcon className="h-4 w-4 mr-1" />
-                Profile
-              </Link>
-              {isAdmin && (
-                <Link to="/admin/dashboard" className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700">
-                  Admin
-                </Link>
-              )}
-              <button
-                onClick={handleSignOut}
-                className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo and Title */}
+          <div className="flex items-center">
+            <img src={Logo} alt="CRH Logo" className="h-12 w-12" />
+            <span className="ml-2 text-xl font-bold text-gray-900">CRH</span>
+          </div>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link
+              to="/user/dashboard"
+              className="text-blue-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+            >
+              <Home className="h-4 w-4 mr-1" />
+              Dashboard
+            </Link>
+            <Link
+              to="/user/course"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Courses
+            </Link>
+            <Link
+              to="/user/resources"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Resources
+            </Link>
+            <Link
+              to="/user/profile"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+            >
+              <UserIcon className="h-4 w-4 mr-1" />
+              Profile
+            </Link>
+            {isAdmin && (
+              <Link
+                to="/admin/dashboard"
+                className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700"
               >
-                <LogOut className="h-4 w-4 mr-1" />
-                Logout
-              </button>
-            </div>
+                Admin
+              </Link>
+            )}
+            <button
+              onClick={handleSignOut}
+              className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+            >
+              <LogOut className="h-4 w-4 mr-1" />
+              Logout
+            </button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-gray-700 hover:text-blue-600 focus:outline-none"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
-      </nav>
+      </div>
+
+      {/* Mobile Dropdown Menu */}
+      {isOpen && (
+        <div className="md:hidden bg-white shadow-lg border-t border-gray-100">
+          <div className="px-4 pt-4 pb-6 space-y-3 flex flex-col">
+            <Link
+              to="/user/dashboard"
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
+            >
+              <Home className="h-4 w-4 mr-1" />
+              Dashboard
+            </Link>
+            <Link
+              to="/user/course"
+              className="text-gray-700 hover:text-blue-600 text-sm font-medium"
+            >
+              Courses
+            </Link>
+            <Link
+              to="/user/resources"
+              className="text-gray-700 hover:text-blue-600 text-sm font-medium"
+            >
+              Resources
+            </Link>
+            <Link
+              to="/user/profile"
+              className="text-gray-700 hover:text-blue-600 text-sm font-medium flex items-center"
+            >
+              <UserIcon className="h-4 w-4 mr-1" />
+              Profile
+            </Link>
+            {isAdmin && (
+              <Link
+                to="/admin/dashboard"
+                className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 text-center"
+              >
+                Admin
+              </Link>
+            )}
+            <button
+              onClick={handleSignOut}
+              className="text-gray-700 hover:text-red-600 text-sm font-medium flex items-center"
+            >
+              <LogOut className="h-4 w-4 mr-1" />
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
+    </nav>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

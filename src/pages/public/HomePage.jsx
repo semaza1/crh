@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  BookOpen, Users, Award, ArrowRight, Play, Clock, Star, X,
+  BookOpen, Users, Award, ArrowRight, Play, Clock, Star, X, Menu,
   Download, FileText, Video, Quote, Mail, Phone, MapPin, Instagram,
   Linkedin, Twitter, Facebook, TrendingUp, Target, Heart, CheckCircle, Youtube
 } from 'lucide-react';
@@ -29,6 +29,7 @@ const HomePage = () => {
   const [courses, setCourses] = useState([]);
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     fetchPreviewData();
@@ -189,37 +190,90 @@ const HomePage = () => {
     <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              {/* <BookOpen className="h-8 w-8 text-blue-600" /> */}
-              <img src={Logo} alt="CRH Logo" className="h-10 w-10" />
-              <span className="ml-2 text-xl font-bold text-gray-900">Career Reach Hub</span>
-            </div>
-            <div className="hidden md:flex items-center space-x-6">
-              <a href="#about" className="text-gray-700 hover:text-blue-600 text-sm font-medium">About</a>
-              <a href="#courses" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Courses</a>
-              <a href="#resources" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Resources</a>
-              <a href="#testimonials" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Testimonials</a>
-              <a href="#team" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Team</a>
-              {user ? (
-                <Link to="/dashboard" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
-                  Dashboard
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo and Title */}
+          <div className="flex items-center">
+            <img src={Logo} alt="CRH Logo" className="h-10 w-10" />
+            <span className="ml-2 text-xl font-bold text-gray-900">
+              Career Reach Hub
+            </span>
+          </div>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center space-x-6">
+            <a href="#about" className="text-gray-700 hover:text-blue-600 text-sm font-medium">About</a>
+            <a href="#courses" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Courses</a>
+            <a href="#resources" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Resources</a>
+            <a href="#testimonials" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Testimonials</a>
+            <a href="#team" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Team</a>
+            {user ? (
+              <Link
+                to={user?.role === 'admin' ? '/admin/dashboard' : '/user/dashboard'}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" className="text-gray-700 hover:text-blue-600 text-sm font-medium">
+                  Login
                 </Link>
-              ) : (
-                <>
-                  <Link to="/login" className="text-gray-700 hover:text-blue-600 text-sm font-medium">
-                    Login
-                  </Link>
-                  <Link to="/signup" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
+                <Link
+                  to="/signup"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-gray-700 hover:text-blue-600 focus:outline-none"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
-      </nav>
+      </div>
+
+      {/* Mobile Dropdown Menu */}
+      {isOpen && (
+        <div className="md:hidden bg-white shadow-lg border-t border-gray-100">
+          <div className="px-4 pt-4 pb-6 space-y-3 flex flex-col">
+            <a href="#about" className="text-gray-700 hover:text-blue-600 text-sm font-medium">About</a>
+            <a href="#courses" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Courses</a>
+            <a href="#resources" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Resources</a>
+            <a href="#testimonials" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Testimonials</a>
+            <a href="#team" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Team</a>
+            {user ? (
+              <Link
+                to="/dashboard"
+                className="block bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 text-center"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" className="block text-gray-700 hover:text-blue-600 text-sm font-medium text-center">
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="block bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 text-center"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </nav>
 
       {/* Hero Section with Background Video */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
@@ -489,7 +543,7 @@ const HomePage = () => {
 
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-white">
+      <section id="testimonials" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16">
@@ -534,7 +588,7 @@ const HomePage = () => {
           </div>
 
           {/* Bottom CTA */}
-          <div className="text-center mt-10">
+          <div id="team" className="text-center mt-10">
             <p className="text-gray-700 text-lg mb-4">
               Be part of a growing community shaping their futures with{" "}
               <span className="text-blue-600 font-semibold">Career Reach Hub</span>
