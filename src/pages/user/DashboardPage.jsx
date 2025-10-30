@@ -364,15 +364,19 @@ const DashboardPage = () => {
             <p className="text-sm text-gray-600">In Progress</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
+          <Link to="/user/certificates" className="block">
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Certificates</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.certificates}</p>
+              </div>
               <div className="bg-purple-100 p-3 rounded-lg">
                 <Award className="h-6 w-6 text-purple-600" />
               </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.certificates}</span>
             </div>
-            <p className="text-sm text-gray-600">Certificates</p>
           </div>
+        </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
