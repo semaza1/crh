@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { 
   BookOpen, GraduationCap, Bell, LogOut, User as UserIcon, Home,
   TrendingUp, Award, Clock, PlayCircle, CheckCircle, Star,
-  Calendar, ArrowRight, BookMarked, Target, Zap, Menu, X
+  Calendar, ArrowRight, BookMarked, Target, Zap
 } from 'lucide-react';
 
 import Logo from '../../assets/Logo.png';
@@ -27,7 +27,6 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const hasFetched = useRef(false);
-  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (user && userProfile && !hasFetched.current) {
@@ -66,10 +65,14 @@ const DashboardPage = () => {
         const enrollmentsWithProgress = await Promise.all(
           (enrollmentData || []).map(async (enrollment) => {
             const progress = await calculateCourseProgress(enrollment.course_id);
+            console.log(`Course ${enrollment.courses?.title}: ${progress}% complete`);
             return { ...enrollment, progress };
           })
         );
         setEnrollments(enrollmentsWithProgress);
+        
+        // Calculate statistics with the fetched progress
+        await calculateStats(enrollmentsWithProgress);
       }
 
       // Fetch available courses (not enrolled)
@@ -105,9 +108,6 @@ const DashboardPage = () => {
         setNotifications(notificationData || []);
       }
 
-      // Calculate statistics
-      await calculateStats(enrollmentData || []);
-
       // Fetch recent activity
       await fetchRecentActivity();
 
@@ -133,13 +133,13 @@ const DashboardPage = () => {
 
       const lessonIds = lessons.map(l => l.id);
 
-      // Get completed lessons for this user that match course lessons
+      // Get completed lessons for this user and course
       const { data: completed, error: progressError } = await supabase
         .from('lesson_progress')
         .select('lesson_id')
         .eq('user_id', user.id)
-        .in('lesson_id', lessonIds)
-        .eq('completed', true);
+        .eq('course_id', courseId)
+        .eq('status', 'completed');
 
       if (progressError) throw progressError;
 
@@ -153,12 +153,13 @@ const DashboardPage = () => {
     }
   };
 
-  const calculateStats = async (enrollmentData) => {
+  const calculateStats = async (enrollmentsWithProgress) => {
     let completedCount = 0;
     let inProgressCount = 0;
 
-    for (const enrollment of enrollmentData) {
-      const progress = await calculateCourseProgress(enrollment.course_id);
+    for (const enrollment of enrollmentsWithProgress) {
+      const progress = enrollment.progress || 0;
+      
       if (progress === 100) {
         completedCount++;
       } else if (progress > 0) {
@@ -166,12 +167,22 @@ const DashboardPage = () => {
       }
     }
 
-    setStats({
-      totalEnrolled: enrollmentData.length,
+    // Count total certificates (completed courses)
+    const certificateCount = completedCount;
+
+    console.log('Stats:', {
+      total: enrollmentsWithProgress.length,
       completed: completedCount,
       inProgress: inProgressCount,
-      certificates: completedCount,
-      totalLearningHours: enrollmentData.length * 8,
+      certificates: certificateCount
+    });
+
+    setStats({
+      totalEnrolled: enrollmentsWithProgress.length,
+      completed: completedCount,
+      inProgress: inProgressCount,
+      certificates: certificateCount,
+      totalLearningHours: enrollmentsWithProgress.length * 8,
       currentStreak: 7
     });
   };
@@ -182,7 +193,7 @@ const DashboardPage = () => {
         .from('lesson_progress')
         .select('*')
         .eq('user_id', user.id)
-        .order('updated_at', { ascending: false })
+        .order('last_accessed_at', { ascending: false })
         .limit(5);
 
       if (error) throw error;
@@ -251,120 +262,44 @@ const DashboardPage = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <nav className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo and Title */}
-          <div className="flex items-center">
-            <img src={Logo} alt="CRH Logo" className="h-12 w-12" />
-            <span className="ml-2 text-xl font-bold text-gray-900">CRH</span>
-          </div>
-
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link
-              to="/user/dashboard"
-              className="text-blue-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium flex items-center"
-            >
-              <Home className="h-4 w-4 mr-1" />
-              Dashboard
-            </Link>
-            <Link
-              to="/user/course"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Courses
-            </Link>
-            <Link
-              to="/user/resources"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Resources
-            </Link>
-            <Link
-              to="/user/profile"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
-            >
-              <UserIcon className="h-4 w-4 mr-1" />
-              Profile
-            </Link>
-            {isAdmin && (
-              <Link
-                to="/admin/dashboard"
-                className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700"
-              >
-                Admin
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <img src={Logo} alt="CRH Logo" className="h-12 w-12" />
+              <span className="ml-2 text-xl font-bold text-gray-900">CRH</span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link to="/user/dashboard" className="text-blue-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                <Home className="h-4 w-4 mr-1" />
+                Dashboard
               </Link>
-            )}
-            <button
-              onClick={handleSignOut}
-              className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
-            >
-              <LogOut className="h-4 w-4 mr-1" />
-              Logout
-            </button>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-blue-600 focus:outline-none"
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+              <Link to="/user/course/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                Courses
+              </Link>
+              <Link to="/user/certificates/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                <Award className="h-4 w-4 mr-1" />
+                My Certificates
+              </Link>
+              <Link to="/user/profile/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                <UserIcon className="h-4 w-4 mr-1" />
+                Profile
+              </Link>
+              {isAdmin && (
+                <Link to="/admin/dashboard" className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700">
+                  Admin
+                </Link>
+              )}
+              <button
+                onClick={handleSignOut}
+                className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+              >
+                <LogOut className="h-4 w-4 mr-1" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Dropdown Menu */}
-      {isOpen && (
-        <div className="md:hidden bg-white shadow-lg border-t border-gray-100">
-          <div className="px-4 pt-4 pb-6 space-y-3 flex flex-col">
-            <Link
-              to="/user/dashboard"
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
-            >
-              <Home className="h-4 w-4 mr-1" />
-              Dashboard
-            </Link>
-            <Link
-              to="/user/course"
-              className="text-gray-700 hover:text-blue-600 text-sm font-medium"
-            >
-              Courses
-            </Link>
-            <Link
-              to="/user/resources"
-              className="text-gray-700 hover:text-blue-600 text-sm font-medium"
-            >
-              Resources
-            </Link>
-            <Link
-              to="/user/profile"
-              className="text-gray-700 hover:text-blue-600 text-sm font-medium flex items-center"
-            >
-              <UserIcon className="h-4 w-4 mr-1" />
-              Profile
-            </Link>
-            {isAdmin && (
-              <Link
-                to="/admin/dashboard"
-                className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 text-center"
-              >
-                Admin
-              </Link>
-            )}
-            <button
-              onClick={handleSignOut}
-              className="text-gray-700 hover:text-red-600 text-sm font-medium flex items-center"
-            >
-              <LogOut className="h-4 w-4 mr-1" />
-              Logout
-            </button>
-          </div>
-        </div>
-      )}
-    </nav>
+      </nav>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -448,8 +383,8 @@ const DashboardPage = () => {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">Continue Learning</h2>
-                  <Link to="/user/course" className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
-                    View All
+                  <Link to="/user/course/" className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
+                    Browse All
                     <ArrowRight className="h-4 w-4 ml-1" />
                   </Link>
                 </div>
@@ -626,9 +561,9 @@ const DashboardPage = () => {
                   {recentActivity.map((activity) => (
                     <div key={activity.id} className="flex items-start gap-3">
                       <div className={`mt-1 p-1.5 rounded-full ${
-                        activity.completed ? 'bg-green-100' : 'bg-blue-100'
+                        activity.status === 'completed' ? 'bg-green-100' : 'bg-blue-100'
                       }`}>
-                        {activity.completed ? (
+                        {activity.status === 'completed' ? (
                           <CheckCircle className="h-4 w-4 text-green-600" />
                         ) : (
                           <PlayCircle className="h-4 w-4 text-blue-600" />
@@ -642,7 +577,7 @@ const DashboardPage = () => {
                           {activity.lessons?.courses?.title}
                         </p>
                         <p className="text-xs text-gray-400 mt-1">
-                          {new Date(activity.updated_at).toLocaleDateString()}
+                          {new Date(activity.last_accessed_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -660,12 +595,6 @@ const DashboardPage = () => {
                   className="block w-full py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg text-center font-medium transition-all"
                 >
                   Browse Courses
-                </Link>
-                <Link
-                  to="/user/course/"
-                  className="block w-full py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg text-center font-medium transition-all"
-                >
-                  My Learning
                 </Link>
                 <Link
                   to="/user/profile/"
@@ -688,10 +617,9 @@ const DashboardPage = () => {
               <span className="ml-2 text-lg font-bold">Career Connect Hub</span>
             </div>
             <div className="flex gap-6 text-sm text-gray-400">
-              <Link to="/user/dashboard/" className="hover:text-white transition-colors">Home</Link>
-              <Link to="/user/course/" className="hover:text-white transition-colors">Courses</Link>
-              <Link to="/user/resources/" className="hover:text-white transition-colors">Resources</Link>
-              <Link to="#" className="hover:text-white transition-colors">Contact</Link>
+              <Link to="/" className="hover:text-white transition-colors">Home</Link>
+              <Link to="/courses" className="hover:text-white transition-colors">Courses</Link>
+              <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-6 pt-6 text-center text-sm text-gray-400">

@@ -16,6 +16,8 @@ import LessonPage from '../pages/user/LessonPage';
 import PaymentPage from '../pages/user/PaymentPage';
 import Resource from '../pages/user/Resources';
 import Profile from '../pages/user/ProfilePage';
+import CertificatesPage from '../pages/user/CertificatePage';
+import VerifyCertificatePage from '../pages/user/VerifyCertificatePage';
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -102,6 +104,15 @@ export const AppRouter = () => {
             }
           />
 
+          <Route
+            path="/user/certificates"
+            element={
+              <ProtectedRoute>
+                <CertificatesPage />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Admin Protected Routes */}
           <Route
             path="/admin/dashboard"
@@ -160,6 +171,10 @@ export const AppRouter = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* Public Route - No authentication required */}
+
+          <Route path="/verify-certificate/:verificationCode?" element={<VerifyCertificatePage />} />
 
           {/* 404 Route */}
           <Route path="/test" element={<TestPage />} />

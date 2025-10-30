@@ -17,9 +17,24 @@ const CourseDetailPage = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [completedLessons, setCompletedLessons] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [courseProgress, setCourseProgress] = useState(0);
 
   useEffect(() => {
     fetchCourseData();
+  }, [courseId, userProfile]);
+
+  // Refresh data when returning to the page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && userProfile) {
+        fetchCourseData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [courseId, userProfile]);
 
   const fetchCourseData = async () => {
@@ -52,7 +67,7 @@ const CourseDetailPage = () => {
           .select('*')
           .eq('user_id', userProfile.id)
           .eq('course_id', courseId)
-          .single();
+          .maybeSingle();
 
         if (enrollmentData) {
           setIsEnrolled(true);
@@ -62,10 +77,19 @@ const CourseDetailPage = () => {
             .from('lesson_progress')
             .select('lesson_id')
             .eq('user_id', userProfile.id)
-            .eq('completed', true);
+            .eq('course_id', courseId)
+            .eq('status', 'completed');
 
           if (progressData) {
             setCompletedLessons(progressData.map(p => p.lesson_id));
+            
+            // Calculate progress percentage
+            const totalLessons = lessonsData?.length || 0;
+            const completedCount = progressData.length;
+            const progressPercentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+            setCourseProgress(progressPercentage);
+            
+            console.log(`Course Progress: ${completedCount}/${totalLessons} = ${progressPercentage}%`);
           }
         }
       }
@@ -93,7 +117,7 @@ const CourseDetailPage = () => {
 
   const calculateProgress = () => {
     if (lessons.length === 0) return 0;
-    return Math.round((completedLessons.length / lessons.length) * 100);
+    return courseProgress;
   };
 
   const formatDuration = (minutes) => {
@@ -189,9 +213,9 @@ const CourseDetailPage = () => {
                         <span className="font-medium text-gray-700">Your Progress</span>
                         <span className="font-bold text-purple-600">{calculateProgress()}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-gray-200 rounded-full h-3">
                         <div 
-                          className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                          className="bg-gradient-to-r from-purple-600 to-blue-600 h-3 rounded-full transition-all duration-500"
                           style={{ width: `${calculateProgress()}%` }}
                         ></div>
                       </div>

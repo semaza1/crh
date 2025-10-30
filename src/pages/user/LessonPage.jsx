@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import { 
   ArrowLeft, ArrowRight, CheckCircle, Clock, BookOpen, 
-  ChevronLeft, ChevronRight, PlayCircle, FileText, Menu, X, Home
+  ChevronLeft, ChevronRight, PlayCircle, FileText
 } from 'lucide-react';
 
 const LessonPage = () => {
@@ -17,7 +17,6 @@ const LessonPage = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     fetchLessonData();
@@ -62,7 +61,7 @@ const LessonPage = () => {
           .select('*')
           .eq('user_id', userProfile.id)
           .eq('course_id', courseId)
-          .single();
+          .maybeSingle();
 
         if (enrollmentData) {
           setIsEnrolled(true);
@@ -74,7 +73,7 @@ const LessonPage = () => {
           .select('*')
           .eq('user_id', userProfile.id)
           .eq('lesson_id', lessonId)
-          .single();
+          .maybeSingle();
 
         if (progressData && progressData.completed) {
           setIsCompleted(true);
@@ -94,18 +93,43 @@ const LessonPage = () => {
     }
 
     try {
-      const { data: existingProgress } = await supabase
+      // First, get the enrollment_id for this course
+      const { data: enrollmentData, error: enrollError } = await supabase
+        .from('enrollments')
+        .select('id')
+        .eq('user_id', userProfile.id)
+        .eq('course_id', courseId)
+        .maybeSingle();
+
+      if (enrollError) throw enrollError;
+
+      if (!enrollmentData) {
+        alert('You must be enrolled in this course to track progress');
+        return;
+      }
+
+      const enrollmentId = enrollmentData.id;
+
+      // Check if progress record exists
+      const { data: existingProgress, error: fetchError } = await supabase
         .from('lesson_progress')
         .select('*')
         .eq('user_id', userProfile.id)
         .eq('lesson_id', lessonId)
-        .single();
+        .eq('enrollment_id', enrollmentId)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
 
       if (existingProgress) {
         // Update existing progress
         const { error } = await supabase
           .from('lesson_progress')
-          .update({ completed: true, completed_at: new Date().toISOString() })
+          .update({ 
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            last_accessed_at: new Date().toISOString()
+          })
           .eq('id', existingProgress.id);
 
         if (error) throw error;
@@ -116,17 +140,21 @@ const LessonPage = () => {
           .insert([{
             user_id: userProfile.id,
             lesson_id: lessonId,
+            enrollment_id: enrollmentId,
             course_id: courseId,
-            completed: true,
-            completed_at: new Date().toISOString()
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            last_accessed_at: new Date().toISOString()
           }]);
 
         if (error) throw error;
       }
 
       setIsCompleted(true);
+      alert('Lesson marked as complete! 🎉');
     } catch (error) {
       console.error('Error marking lesson as complete:', error);
+      alert('Failed to mark lesson as complete. Please try again.');
     }
   };
 
@@ -202,101 +230,39 @@ const LessonPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Top Row */}
-        <div className="flex items-center justify-between h-16">
-          {/* Left Section: Back to Course */}
-          <div className="flex items-center">
-            <Link
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link 
               to={`/user/course/${courseId}`}
               className="flex items-center text-gray-700 hover:text-purple-600 transition-colors"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
-              <span className="font-medium truncate">{course.title}</span>
+              <span className="font-medium">{course.title}</span>
             </Link>
-          </div>
-
-          {/* Right Section (Desktop) */}
-          <div className="hidden md:flex items-center gap-4">
-            <span className="text-sm text-gray-600">
-              Lesson {currentIndex + 1} of {allLessons.length}
-            </span>
-
-            <Link
-              to="/user/dashboard"
-              className="flex items-center text-gray-700 hover:text-blue-600 text-sm font-medium"
-            >
-              <Home className="h-4 w-4 mr-1" />
-              Back to Dashboard
-            </Link>
-
-            {isEnrolled && (
-              <button
-                onClick={markAsComplete}
-                disabled={isCompleted}
-                className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
-                  isCompleted
-                    ? "bg-green-100 text-green-700 cursor-default"
-                    : "bg-purple-600 text-white hover:bg-purple-700"
-                }`}
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                {isCompleted ? "Completed" : "Mark as Complete"}
-              </button>
-            )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-purple-600 focus:outline-none"
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">
+                Lesson {currentIndex + 1} of {allLessons.length}
+              </span>
+              {isEnrolled && (
+                <button
+                  onClick={markAsComplete}
+                  disabled={isCompleted}
+                  className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
+                    isCompleted
+                      ? 'bg-green-100 text-green-700 cursor-default'
+                      : 'bg-purple-600 text-white hover:bg-purple-700'
+                  }`}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  {isCompleted ? 'Completed' : 'Mark as Complete'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Mobile Dropdown Menu */}
-      {isOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 shadow-sm">
-          <div className="px-4 pt-4 pb-6 space-y-3 flex flex-col">
-            <span className="text-sm text-gray-600">
-              Lesson {currentIndex + 1} of {allLessons.length}
-            </span>
-
-            <Link
-              to="/user/dashboard"
-              className="flex items-center text-gray-700 hover:text-blue-600 text-sm font-medium"
-              onClick={() => setIsOpen(false)}
-            >
-              <Home className="h-4 w-4 mr-1" />
-              Back to Dashboard
-            </Link>
-
-            {isEnrolled && (
-              <button
-                onClick={() => {
-                  markAsComplete();
-                  setIsOpen(false);
-                }}
-                disabled={isCompleted}
-                className={`flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors ${
-                  isCompleted
-                    ? "bg-green-100 text-green-700 cursor-default"
-                    : "bg-purple-600 text-white hover:bg-purple-700"
-                }`}
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                {isCompleted ? "Completed" : "Mark as Complete"}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-    </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
