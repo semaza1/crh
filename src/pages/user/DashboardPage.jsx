@@ -5,8 +5,10 @@ import { supabase } from '../../lib/supabaseClient';
 import { 
   BookOpen, GraduationCap, Bell, LogOut, User as UserIcon, Home,
   TrendingUp, Award, Clock, PlayCircle, CheckCircle, Star,
-  Calendar, ArrowRight, BookMarked, Target, Zap
+  Calendar, ArrowRight, BookMarked, Target, Zap, Menu, X
 } from 'lucide-react';
+import NotificationBell from '../../components/common/NotificationBell';
+   // In your nav: {user && <NotificationBell />}
 
 import Logo from '../../assets/Logo.png';
 
@@ -15,6 +17,7 @@ const DashboardPage = () => {
   const [enrollments, setEnrollments] = useState([]);
   const [availableCourses, setAvailableCourses] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
   const [stats, setStats] = useState({
     totalEnrolled: 0,
     completed: 0,
@@ -256,50 +259,149 @@ const DashboardPage = () => {
         </div>
       </div>
     );
-  }
+  };
 
   return (
+    
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <nav className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <img src={Logo} alt="CRH Logo" className="h-12 w-12" />
-              <span className="ml-2 text-xl font-bold text-gray-900">CRH</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link to="/user/dashboard" className="text-blue-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                <Home className="h-4 w-4 mr-1" />
-                Dashboard
-              </Link>
-              <Link to="/user/course/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-                Courses
-              </Link>
-              <Link to="/user/certificates/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                <Award className="h-4 w-4 mr-1" />
-                My Certificates
-              </Link>
-              <Link to="/user/profile/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                <UserIcon className="h-4 w-4 mr-1" />
-                Profile
-              </Link>
-              {isAdmin && (
-                <Link to="/admin/dashboard" className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700">
-                  Admin
-                </Link>
-              )}
-              <button
-                onClick={handleSignOut}
-                className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+
+          {/* LOGO */}
+          <div className="flex items-center">
+            <img src={Logo} alt="CRH Logo" className="h-12 w-12" />
+            <span className="ml-2 text-xl font-bold text-gray-900">CRH</span>
+          </div>
+
+          {/* MOBILE MENU BUTTON */}
+          <div className="flex lg:hidden">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-gray-700 hover:text-gray-900 focus:outline-none"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+
+          {/* LINKS (DESKTOP) */}
+          <div className="hidden lg:flex items-center space-x-4">
+            <Link
+              to="/user/dashboard"
+              className="text-blue-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+            >
+              <Home className="h-4 w-4 mr-1" />
+              Dashboard
+            </Link>
+
+            <Link
+              to="/user/course/"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Courses
+            </Link>
+
+            <Link
+              to="/user/certificates/"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+            >
+              <Award className="h-4 w-4 mr-1" />
+              My Certificates
+            </Link>
+
+            <Link
+              to="/user/profile/"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+            >
+              <UserIcon className="h-4 w-4 mr-1" />
+              Profile
+            </Link>
+
+            {isAdmin && (
+              <Link
+                to="/admin/dashboard"
+                className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700"
               >
-                <LogOut className="h-4 w-4 mr-1" />
-                Logout
-              </button>
-            </div>
+                Admin
+              </Link>
+            )}
+
+            {user && <NotificationBell />}
+
+            <button
+              onClick={handleSignOut}
+              className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+            >
+              <LogOut className="h-4 w-4 mr-1" />
+              Logout
+            </button>
           </div>
         </div>
-      </nav>
+      </div>
+
+      {/* MOBILE MENU DROPDOWN */}
+      {isOpen && (
+        <div className="lg:hidden bg-white shadow-sm animate-slide-down">
+          <div className="px-4 pt-2 pb-4 space-y-2">
+
+            <Link
+              to="/user/dashboard"
+              className="block text-blue-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              Dashboard
+            </Link>
+
+            <Link
+              to="/user/course/"
+              className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              Courses
+            </Link>
+
+            <Link
+              to="/user/certificates/"
+              className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              My Certificates
+            </Link>
+
+            <Link
+              to="/user/profile/"
+              className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              Profile
+            </Link>
+
+            {isAdmin && (
+              <Link
+                to="/admin/dashboard"
+                className="block bg-purple-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-purple-700"
+                onClick={() => setIsOpen(false)}
+              >
+                Admin
+              </Link>
+            )}
+
+            {user && <NotificationBell />}
+
+            <button
+              onClick={() => {
+                handleSignOut();
+                setIsOpen(false);
+              }}
+              className="block text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
+    </nav>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -364,19 +466,16 @@ const DashboardPage = () => {
             <p className="text-sm text-gray-600">In Progress</p>
           </div>
 
-          <Link to="/user/certificates" className="block">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Certificates</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.certificates}</p>
-              </div>
+          <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
               <div className="bg-purple-100 p-3 rounded-lg">
                 <Award className="h-6 w-6 text-purple-600" />
               </div>
+              <span className="text-2xl font-bold text-gray-900">{stats.certificates}</span>
             </div>
+            <p className="text-sm text-gray-600">Certificates Earned</p>
           </div>
-        </Link>
+        
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

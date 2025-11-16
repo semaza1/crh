@@ -232,24 +232,30 @@ const LessonPage = () => {
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-4 sm:h-16">
+
+            {/* Back + Title */}
             <Link 
               to={`/user/course/${courseId}`}
               className="flex items-center text-gray-700 hover:text-purple-600 transition-colors"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
-              <span className="font-medium">{course.title}</span>
+              <span className="font-medium text-sm sm:text-base">{course.title}</span>
             </Link>
-            
-            <div className="flex items-center gap-4">
+
+            {/* Right side (Lesson info + Complete button) */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+
               <span className="text-sm text-gray-600">
                 Lesson {currentIndex + 1} of {allLessons.length}
               </span>
+
               {isEnrolled && (
                 <button
                   onClick={markAsComplete}
                   disabled={isCompleted}
-                  className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex items-center px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base w-full sm:w-auto justify-center ${
                     isCompleted
                       ? 'bg-green-100 text-green-700 cursor-default'
                       : 'bg-purple-600 text-white hover:bg-purple-700'
@@ -259,10 +265,14 @@ const LessonPage = () => {
                   {isCompleted ? 'Completed' : 'Mark as Complete'}
                 </button>
               )}
+
             </div>
+
           </div>
+
         </div>
       </div>
+
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

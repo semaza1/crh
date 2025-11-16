@@ -1,3 +1,6 @@
+// FILE: src/components/admin/ManageNotificationsPage.jsx
+// FIXED: Changed full_name to name (adjust based on your column name)
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
@@ -35,14 +38,14 @@ const ManageNotificationsPage = () => {
 
   const fetchData = async () => {
     try {
-      // Fetch notifications with user info
+      // FIXED: Changed full_name to name
       const { data: notifData, error: notifError } = await supabase
         .from('email_notifications')
         .select(`
           *,
           users (
             id,
-            full_name,
+            name,
             email
           )
         `)
@@ -52,11 +55,11 @@ const ManageNotificationsPage = () => {
       setNotifications(notifData || []);
       setFilteredNotifications(notifData || []);
 
-      // Fetch all users for dropdown
+      // FIXED: Changed full_name to name
       const { data: usersData, error: usersError } = await supabase
         .from('users')
-        .select('id, full_name, email')
-        .order('full_name', { ascending: true });
+        .select('id, name, email')
+        .order('name', { ascending: true });
 
       if (usersError) throw usersError;
       setUsers(usersData || []);
@@ -75,7 +78,7 @@ const ManageNotificationsPage = () => {
       filtered = filtered.filter(notif =>
         notif.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         notif.message?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        notif.users?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        notif.users?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         notif.users?.email?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -99,7 +102,6 @@ const ManageNotificationsPage = () => {
 
     try {
       if (formData.send_to_all) {
-        // Send to all users
         const notificationsToInsert = users.map(user => ({
           user_id: user.id,
           subject: formData.subject,
@@ -114,7 +116,6 @@ const ManageNotificationsPage = () => {
         if (error) throw error;
         showMessage('success', `Notification sent to ${users.length} users!`);
       } else {
-        // Send to specific user or update existing
         const notificationData = {
           user_id: formData.user_id,
           subject: formData.subject,
@@ -257,7 +258,6 @@ const ManageNotificationsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -272,15 +272,12 @@ const ManageNotificationsPage = () => {
         </div>
       </nav>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Notifications</h1>
           <p className="text-gray-600">Send and manage notifications to users</p>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
@@ -320,7 +317,6 @@ const ManageNotificationsPage = () => {
           </div>
         </div>
 
-        {/* Message */}
         {message.text && (
           <div className={`mb-6 rounded-lg p-4 flex items-center ${
             message.type === 'success' 
@@ -338,7 +334,6 @@ const ManageNotificationsPage = () => {
           </div>
         )}
 
-        {/* Actions & Filters Bar */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center gap-4">
             <div className="relative flex-1 max-w-md">
@@ -386,7 +381,6 @@ const ManageNotificationsPage = () => {
           </div>
         </div>
 
-        {/* Notifications List */}
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
@@ -416,24 +410,12 @@ const ManageNotificationsPage = () => {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Recipient
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Subject
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Created
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipient</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -448,7 +430,7 @@ const ManageNotificationsPage = () => {
                       <td className="px-6 py-4">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {notification.users?.full_name || 'Unknown User'}
+                            {notification.users?.name || 'Unknown User'}
                           </div>
                           <div className="text-sm text-gray-500">
                             {notification.users?.email}
@@ -504,7 +486,6 @@ const ManageNotificationsPage = () => {
         )}
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-white rounded-lg max-w-2xl w-full p-6 my-8">
@@ -568,7 +549,7 @@ const ManageNotificationsPage = () => {
                     <option value="">Select a user...</option>
                     {users.map(user => (
                       <option key={user.id} value={user.id}>
-                        {user.full_name} ({user.email})
+                        {user.name} ({user.email})
                       </option>
                     ))}
                   </select>

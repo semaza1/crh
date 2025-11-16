@@ -18,6 +18,7 @@ import Resource from '../pages/user/Resources';
 import Profile from '../pages/user/ProfilePage';
 import CertificatesPage from '../pages/user/CertificatePage';
 import VerifyCertificatePage from '../pages/user/VerifyCertificatePage';
+import Notification from "../pages/user/NotificationPage";
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -26,6 +27,7 @@ import ResourcesPage from '../pages/admin/ManageResources';
 import UserPage from '../pages/admin/ManageUsers';
 import LessonsPage from '../pages/admin/ManageLesson';
 import EnrollmentsPage from '../pages/admin/ManageEnrollmentsPage';
+import NotificationsPage from '../pages/admin/ManageNotification';
 
 // 404 Page
 import NotFound from '../pages/NotFound';
@@ -105,6 +107,15 @@ export const AppRouter = () => {
           />
 
           <Route
+            path="/user/notifications/"
+            element={
+              <ProtectedRoute>
+                <Notification />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/user/certificates"
             element={
               <ProtectedRoute>
@@ -168,6 +179,15 @@ export const AppRouter = () => {
             element={
               <ProtectedRoute requireAdmin>
                 <UserPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Manage Notifications */}
+          <Route
+            path="/admin/notifications"
+            element={
+              <ProtectedRoute requireAdmin>
+                <NotificationsPage />
               </ProtectedRoute>
             }
           />
