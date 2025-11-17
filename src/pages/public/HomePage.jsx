@@ -17,7 +17,6 @@ import Steven from '../../assets/team_members/steven.jpg';
 import Pacific from '../../assets/team_members/pacific.jpg';
 import Eddy from '../../assets/team_members/eddy.jpg';
 import Esther from '../../assets/team_members/esther.jpg';
-// import Emmanuel from '../../assets/team_members/emmanuel.png';
 import Image from '../../assets/place_of_work.jpg';
 import Logo from '../../assets/Logo.png';
 import Emmanuel from '../../assets/team_members/Professional.png';
