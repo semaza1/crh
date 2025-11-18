@@ -207,6 +207,7 @@ const HomePage = () => {
             <a href="#resources" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Resources</a>
             <a href="#testimonials" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Testimonials</a>
             <a href="#team" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Team</a>
+            <a href="/path2college" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Path to College</a>
             {user ? (
               <Link
                 to={user?.role === 'admin' ? '/admin/dashboard' : '/user/dashboard'}
@@ -250,6 +251,7 @@ const HomePage = () => {
             <a href="#resources" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Resources</a>
             <a href="#testimonials" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Testimonials</a>
             <a href="#team" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Team</a>
+            <a href="/path2college" className="text-gray-700 hover:text-blue-600 text-sm font-medium">Path to College</a>
             {user ? (
               <Link
                 to="/dashboard"

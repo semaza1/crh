@@ -7,6 +7,7 @@ import { ProtectedRoute } from './ProtectedRoute';
 import HomePage from '../pages/public/HomePage';
 import LoginPage from '../pages/public/LoginPage';
 import SignUpPage from '../pages/public/SignUpPage';
+import Path2College from '../pages/public/Path2College';
 
 // User Pages
 import DashboardPage from '../pages/user/DashboardPage';
@@ -41,7 +42,7 @@ export const AppRouter = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
-          
+          <Route path="/path2college" element={<Path2College />} />
 
           {/* User Protected Routes */}
           <Route
