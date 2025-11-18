@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { 
   BookOpen, GraduationCap, ExternalLink, Info, MoveLeftIcon,
 } from 'lucide-react';
-import Logo from '../../assets/logo.png';
+import Logo from '../../assets/Logo.png';
 
 const Path2College = () => {
   const resources = [
