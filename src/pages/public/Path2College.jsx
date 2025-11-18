@@ -104,7 +104,7 @@ const Path2College = () => {
               <div className="aspect-video bg-black">
                 <iframe
                   className="w-full h-full"
-                  src="https://youtu.be/158aX-gyHU4?si=ibAvL60cN6T3z9bW"
+                  src="https://www.youtube.com/embed/158aX-gyHU4"
                   title="How to Prepare for College | How to College | Crash Course"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
