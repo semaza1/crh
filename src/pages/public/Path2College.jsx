@@ -6,6 +6,13 @@ import {
   BookOpen, GraduationCap, ExternalLink, Info, MoveLeftIcon,
 } from 'lucide-react';
 import Logo from '../../assets/Logo.png';
+import Asyv from '../../assets/resources/asyv.png';
+import Edukik from '../../assets/resources/edukik.png';
+import Code from '../../assets/resources/code.png';
+import ED from '../../assets/resources/ea&ed.jpg';
+import Financial from '../../assets/resources/fs.jpg';
+import Sat from '../../assets/resources/sat.jpeg';
+import Personal from '../../assets/resources/personal.png';
 
 const Path2College = () => {
   const resources = [
@@ -15,7 +22,7 @@ const Path2College = () => {
       description: 'Code University in Germany',
       category: 'Application',
       link: 'https://apply.code.berlin/?_gl=1*11mu09s*_gcl_au*NjcxNjkxMDE1LjE3NjMzMjM0NTY.*_ga*Nzg3NjM4MzYxLjE3NjMzMjM0NTc.*_ga_9XF23QCQR8*czE3NjMzMjM0NTYkbzEkZzAkdDE3NjMzMjM0NTYkajYwJGwwJGg2Mzg0MTQwMTc.',
-      icon: '🎓'
+      icon: Code
     },
     {
       id: 2,
@@ -23,7 +30,7 @@ const Path2College = () => {
       description: 'By Yale Young African Scholars Program',
       category: 'Financial Aid',
       link: 'https://docs.google.com/document/d/1osrS4y6VCQcveyCkNVFWu095YVV1Zf38a8ztOYkKoqM/edit?tab=t.0',
-      icon: '💰'
+      icon: Financial
     },
     {
       id: 3,
@@ -31,7 +38,7 @@ const Path2College = () => {
       description: 'By Big J Education',
       category: 'Timeline',
       link: 'https://www.bigjeducationalconsulting.com/resources',
-      icon: '📅'
+      icon: ED
     },
     {
       id: 4,
@@ -39,7 +46,7 @@ const Path2College = () => {
       description: 'By Edukik',
       category: 'Test Prep',
       link: 'https://app.edukik.com/dashboard',
-      icon: '📚'
+      icon: Edukik
     },
     {
       id: 5,
@@ -47,7 +54,7 @@ const Path2College = () => {
       description: 'by CRC ASYV',
       category: 'Resources',
       link: 'https://sites.google.com/asyv.org/asyv-crc/home',
-      icon: '🌍'
+      icon: Asyv
     },
     {
       id: 6,
@@ -55,7 +62,7 @@ const Path2College = () => {
       description: 'by College Board',
       category: 'Resources',
       link: 'https://bluebook.collegeboard.org/students',
-      icon: '🌍'
+      icon: Sat
     },
     {
       id: 7,
@@ -63,7 +70,7 @@ const Path2College = () => {
       description: 'by Izere Emile',
       category: 'Resources',
       link: 'https://careerconnecthub.kesug.com/CRP%20GuideBook%20(1).pdf',
-      icon: '🌍'
+      icon: Personal
     },
   ];
 
@@ -181,7 +188,7 @@ const Path2College = () => {
                   <div key={resource.id} className="bg-white rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-start gap-4">
                       <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center text-3xl">
-                        {resource.icon}
+                        <img src={resource.icon} alt={resource.title} className="w-16 h-16 object-contain" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-gray-900 text-sm mb-1 leading-tight">
