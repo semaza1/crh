@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  BookOpen, Users, Award, ArrowRight, Play, Clock, Star, X, Menu,
-  Download, FileText, Video, Quote, Mail, Phone, MapPin, Instagram,
-  Linkedin, Twitter, Facebook, TrendingUp, Target, Heart, CheckCircle, Youtube
+  ArrowRight, Play, Clock, Star, X, Menu,
+  FileText, Mail, Phone, MapPin, Instagram,
+  Linkedin, Twitter, Facebook, CheckCircle, Youtube
 } from 'lucide-react';
 
 import Kayitare from '../../assets/team_members/kayitare.jpg';
