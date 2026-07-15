@@ -80,13 +80,19 @@ const DashboardPage = () => {
 
       // Fetch available courses (not enrolled)
       const enrolledIds = enrollmentData?.map(e => e.course_id) || [];
-      const { data: coursesData, error: coursesError } = await supabase
+      
+      let coursesQuery = supabase
         .from('courses')
         .select('*')
         .eq('status', 'published')
-        .not('id', 'in', `(${enrolledIds.length > 0 ? enrolledIds.join(',') : 'null'})`)
         .order('created_at', { ascending: false })
         .limit(6);
+
+      if (enrolledIds.length > 0) {
+        coursesQuery = coursesQuery.not('id', 'in', `(${enrolledIds.join(',')})`);
+      }
+
+      const { data: coursesData, error: coursesError } = await coursesQuery;
 
       if (coursesError) {
         console.error('Courses error:', coursesError);

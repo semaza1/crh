@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
       if (data.user) {
-        loadProfile(data.user.id);
+        loadProfile(data.user);
       } else {
         setLoading(false);
       }
@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
         setUser(session?.user || null);
         
         if (session?.user && event === 'SIGNED_IN') {
-          loadProfile(session.user.id);
+          loadProfile(session.user);
         } else if (!session?.user) {
           setUserProfile(null);
           setLoading(false);
@@ -38,14 +38,14 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const loadProfile = async (userId) => {
+  const loadProfile = async (authUser) => {
     try {
-      console.log('Loading profile for:', userId);
+      console.log('Loading profile for:', authUser.id);
       
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('id', userId)
+        .eq('id', authUser.id)
         .maybeSingle(); // Use maybeSingle instead of single to avoid errors
 
       if (error) {
@@ -56,23 +56,33 @@ export const AuthProvider = ({ children }) => {
         console.log('Profile loaded:', data);
         setUserProfile(data);
       } else {
-        console.log('No profile found, creating fallback');
+        console.log('No profile found, creating and saving fallback');
         // Create a fallback profile
         const fallback = {
-          id: userId,
-          email: user?.email || '',
-          name: user?.email?.split('@')[0] || 'User',
+          id: authUser.id,
+          email: authUser.email || '',
+          name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
           role: 'user',
-          phone: '',
-          interests: ''
+          phone: authUser.user_metadata?.phone || '',
+          interests: authUser.user_metadata?.interests || ''
         };
+        
+        // Save to database so it persists
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert([fallback]);
+          
+        if (insertError) {
+          console.error('Error saving fallback profile to DB:', insertError);
+        }
+        
         setUserProfile(fallback);
       }
     } catch (err) {
       console.error('Load profile exception:', err);
       setUserProfile({
-        id: userId,
-        email: user?.email || '',
+        id: authUser.id,
+        email: authUser.email || '',
         name: 'User',
         role: 'user'
       });
