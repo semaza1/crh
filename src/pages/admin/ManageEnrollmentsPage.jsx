@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { 
   BookOpen, GraduationCap, Search, X, Check, AlertCircle, 
-  Plus, Edit, Trash2, User, Calendar, TrendingUp, Filter
+  Plus, Edit, Trash2, User, Calendar, TrendingUp, Filter,
+  ArrowLeft, CheckCircle2, Clock
 } from 'lucide-react';
 
 const ManageEnrollmentsPage = () => {
@@ -20,7 +21,6 @@ const ManageEnrollmentsPage = () => {
     user_id: '',
     course_id: '',
     status: 'active',
-    progress: 0,
     expires_at: ''
   });
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -38,12 +38,10 @@ const ManageEnrollmentsPage = () => {
   useEffect(() => {
     let filtered = enrollments;
 
-    // Apply status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(e => e.status === statusFilter);
     }
 
-    // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(e =>
         e.users?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,7 +55,6 @@ const ManageEnrollmentsPage = () => {
 
   const fetchData = async () => {
     try {
-      // Fetch enrollments with user and course info
       const { data: enrollmentData, error: enrollError } = await supabase
         .from('enrollments')
         .select(`
@@ -72,37 +69,29 @@ const ManageEnrollmentsPage = () => {
       setEnrollments(enrollmentData || []);
       setFilteredEnrollments(enrollmentData || []);
 
-      // Calculate stats
-      const statsData = {
+      setStats({
         total: enrollmentData?.length || 0,
         active: enrollmentData?.filter(e => e.status === 'active').length || 0,
         completed: enrollmentData?.filter(e => e.status === 'completed').length || 0,
         dropped: enrollmentData?.filter(e => e.status === 'dropped').length || 0
-      };
-      setStats(statsData);
+      });
 
       // Fetch users for dropdown
-      const { data: userData, error: userError } = await supabase
+      const { data: usersData } = await supabase
         .from('users')
         .select('id, name, email')
-        .order('name');
-
-      if (userError) throw userError;
-      setUsers(userData || []);
+        .order('name', { ascending: true });
+      setUsers(usersData || []);
 
       // Fetch courses for dropdown
-      const { data: courseData, error: courseError } = await supabase
+      const { data: coursesData } = await supabase
         .from('courses')
-        .select('id, title, is_premium')
-        .eq('status', 'published')
-        .order('title');
-
-      if (courseError) throw courseError;
-      setCourses(courseData || []);
-
+        .select('id, title')
+        .order('title', { ascending: true });
+      setCourses(coursesData || []);
     } catch (error) {
       console.error('Error fetching data:', error);
-      showMessage('error', 'Failed to load enrollments');
+      showMessage('error', 'Failed to load enrollment records');
     } finally {
       setLoading(false);
     }
@@ -113,43 +102,30 @@ const ManageEnrollmentsPage = () => {
     setLoading(true);
 
     try {
-      const enrollmentData = {
-        user_id: formData.user_id,
-        course_id: formData.course_id,
-        status: formData.status,
-        progress: parseInt(formData.progress),
-        expires_at: formData.expires_at || null
-      };
-
       if (editingEnrollment) {
-        // Update existing enrollment
         const { error } = await supabase
           .from('enrollments')
-          .update(enrollmentData)
+          .update({
+            status: formData.status,
+            expires_at: formData.expires_at || null
+          })
           .eq('id', editingEnrollment.id);
 
         if (error) throw error;
         showMessage('success', 'Enrollment updated successfully!');
       } else {
-        // Check if enrollment already exists
-        const { data: existing } = await supabase
-          .from('enrollments')
-          .select('id')
-          .eq('user_id', formData.user_id)
-          .eq('course_id', formData.course_id)
-          .single();
-
-        if (existing) {
-          throw new Error('User is already enrolled in this course');
-        }
-
-        // Create new enrollment
         const { error } = await supabase
           .from('enrollments')
-          .insert([enrollmentData]);
+          .insert([{
+            user_id: formData.user_id,
+            course_id: formData.course_id,
+            status: formData.status,
+            expires_at: formData.expires_at || null,
+            enrolled_at: new Date().toISOString()
+          }]);
 
         if (error) throw error;
-        showMessage('success', 'Enrollment created successfully!');
+        showMessage('success', 'Student enrolled successfully!');
       }
 
       setShowModal(false);
@@ -165,7 +141,7 @@ const ManageEnrollmentsPage = () => {
   };
 
   const handleDelete = async (enrollmentId) => {
-    if (!confirm('Are you sure you want to delete this enrollment?')) {
+    if (!confirm('Are you sure you want to remove this enrollment record?')) {
       return;
     }
 
@@ -176,35 +152,11 @@ const ManageEnrollmentsPage = () => {
         .eq('id', enrollmentId);
 
       if (error) throw error;
-      showMessage('success', 'Enrollment deleted successfully!');
+      showMessage('success', 'Enrollment removed successfully');
       fetchData();
     } catch (error) {
       console.error('Error deleting enrollment:', error);
       showMessage('error', 'Failed to delete enrollment');
-    }
-  };
-
-  const updateEnrollmentStatus = async (enrollmentId, newStatus) => {
-    try {
-      const updates = { status: newStatus };
-      
-      // If marking as completed, set completed_at
-      if (newStatus === 'completed') {
-        updates.completed_at = new Date().toISOString();
-        updates.progress = 100;
-      }
-
-      const { error } = await supabase
-        .from('enrollments')
-        .update(updates)
-        .eq('id', enrollmentId);
-
-      if (error) throw error;
-      showMessage('success', 'Status updated successfully!');
-      fetchData();
-    } catch (error) {
-      console.error('Error updating status:', error);
-      showMessage('error', 'Failed to update status');
     }
   };
 
@@ -214,8 +166,7 @@ const ManageEnrollmentsPage = () => {
       setFormData({
         user_id: enrollment.user_id,
         course_id: enrollment.course_id,
-        status: enrollment.status,
-        progress: enrollment.progress,
+        status: enrollment.status || 'active',
         expires_at: enrollment.expires_at ? enrollment.expires_at.split('T')[0] : ''
       });
     } else {
@@ -233,409 +184,346 @@ const ManageEnrollmentsPage = () => {
 
   const resetForm = () => {
     setFormData({
-      user_id: '',
-      course_id: '',
+      user_id: users[0]?.id || '',
+      course_id: courses[0]?.id || '',
       status: 'active',
-      progress: 0,
       expires_at: ''
     });
   };
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'dropped':
-        return 'bg-red-100 text-red-800';
-      case 'expired':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+    setTimeout(() => setMessage({ type: '', text: '' }), 4000);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <BookOpen className="h-8 w-8 text-purple-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">CRH Admin</span>
-            </div>
-            <Link to="/admin/dashboard" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">
-              ← Back to Dashboard
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-brand-500 selection:text-white">
+      {/* Top Banner Header */}
+      <div className="relative bg-slate-900 text-white overflow-hidden py-14 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-900/50 via-slate-900 to-slate-900 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <Link 
+              to="/admin/dashboard" 
+              className="inline-flex items-center text-sm font-semibold text-brand-400 hover:text-brand-300 transition-colors mb-3 group"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1.5 transform group-hover:-translate-x-1 transition-transform" />
+              Back to Command Center
             </Link>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-playfair font-bold text-white tracking-tight">
+              Manage <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">Enrollments</span>
+            </h1>
+            <p className="text-slate-400 mt-2 text-base font-medium">
+              Track course participants, update completion statuses, and manually assign enrollments.
+            </p>
           </div>
+
+          <button
+            onClick={() => openModal()}
+            className="px-6 py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-2xl shadow-lg shadow-brand-600/30 transition-all flex items-center justify-center gap-2 shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Enroll Student</span>
+          </button>
         </div>
-      </nav>
+      </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Enrollments</h1>
-          <p className="text-gray-600">View and manage course enrollments</p>
-        </div>
-
-        {/* Message */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Toast Feedback */}
         {message.text && (
-          <div className={`mb-6 rounded-lg p-4 flex items-center ${
+          <div className={`mb-6 rounded-2xl p-4 flex items-center shadow-lg animate-fade-in ${
             message.type === 'success' 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-red-50 border border-red-200'
+              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-700' 
+              : 'bg-red-500/10 border border-red-500/30 text-red-700'
           }`}>
             {message.type === 'success' ? (
-              <Check className="h-5 w-5 text-green-600 mr-3" />
+              <Check className="h-5 w-5 mr-3 shrink-0 text-emerald-600" />
             ) : (
-              <AlertCircle className="h-5 w-5 text-red-600 mr-3" />
+              <AlertCircle className="h-5 w-5 mr-3 shrink-0 text-red-600" />
             )}
-            <p className={`text-sm ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
-              {message.text}
-            </p>
+            <p className="text-sm font-bold">{message.text}</p>
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="bg-purple-100 p-3 rounded-lg">
-                <GraduationCap className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-600">Total Enrollments</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              </div>
+        {/* Metric Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Total Seats</p>
+              <p className="text-3xl font-extrabold text-slate-900">{stats.total}</p>
+            </div>
+            <div className="p-3.5 bg-blue-50 rounded-2xl text-blue-600">
+              <GraduationCap className="h-7 w-7" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
-              </div>
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Active Learners</p>
+              <p className="text-3xl font-extrabold text-emerald-600">{stats.active}</p>
+            </div>
+            <div className="p-3.5 bg-emerald-50 rounded-2xl text-emerald-600">
+              <TrendingUp className="h-7 w-7" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="bg-green-100 p-3 rounded-lg">
-                <Check className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
-              </div>
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Course Graduates</p>
+              <p className="text-3xl font-extrabold text-brand-600">{stats.completed}</p>
+            </div>
+            <div className="p-3.5 bg-brand-50 rounded-2xl text-brand-600">
+              <CheckCircle2 className="h-7 w-7" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="bg-red-100 p-3 rounded-lg">
-                <X className="h-6 w-6 text-red-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-600">Dropped</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.dropped}</p>
-              </div>
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Dropped / Other</p>
+              <p className="text-3xl font-extrabold text-slate-400">{stats.dropped}</p>
+            </div>
+            <div className="p-3.5 bg-slate-100 rounded-2xl text-slate-500">
+              <Clock className="h-7 w-7" />
             </div>
           </div>
         </div>
 
-        {/* Filters & Actions */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex flex-col sm:flex-row gap-4 flex-1">
-              {/* Search */}
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by user or course..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
+        {/* Toolbar */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by student name, email, or course..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+            />
+          </div>
 
-              {/* Status Filter */}
-              <div className="relative">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="completed">Completed</option>
-                  <option value="dropped">Dropped</option>
-                  <option value="expired">Expired</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Add Button */}
-            <button
-              onClick={() => openModal()}
-              className="flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium whitespace-nowrap"
+          <div className="flex items-center gap-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-semibold text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none transition-colors"
             >
-              <Plus className="h-5 w-5 mr-2" />
-              Enroll Student
-            </button>
+              <option value="all">All Progress Statuses</option>
+              <option value="active">Active Only</option>
+              <option value="completed">Completed (Graduated)</option>
+              <option value="dropped">Dropped Only</option>
+            </select>
+
+            <span className="text-xs font-bold text-slate-400">
+              {filteredEnrollments.length} {filteredEnrollments.length === 1 ? 'record' : 'records'}
+            </span>
           </div>
         </div>
 
         {/* Enrollments Table */}
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-          </div>
-        ) : filteredEnrollments.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <GraduationCap className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {searchTerm || statusFilter !== 'all' ? 'No enrollments found' : 'No enrollments yet'}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {searchTerm || statusFilter !== 'all' 
-                ? 'Try adjusting your filters' 
-                : 'Get started by enrolling students in courses'}
-            </p>
-            {!searchTerm && statusFilter === 'all' && (
-              <button
-                onClick={() => openModal()}
-                className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Enroll Student
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Student
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Course
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Progress
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Enrolled
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredEnrollments.map((enrollment) => (
-                  <tr key={enrollment.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                          <User className="h-5 w-5 text-purple-600" />
-                        </div>
-                        <div className="ml-4">
-                          <p className="font-medium text-gray-900">{enrollment.users?.name || 'Unknown'}</p>
-                          <p className="text-sm text-gray-600">{enrollment.users?.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="font-medium text-gray-900">{enrollment.courses?.title || 'Unknown Course'}</p>
-                      {enrollment.courses?.is_premium && (
-                        <span className="inline-block mt-1 bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded">
-                          Premium
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
-                          <div
-                            className="bg-green-600 h-2 rounded-full"
-                            style={{ width: `${enrollment.progress}%` }}
-                          ></div>
-                        </div>
-                        <span className="ml-2 text-sm text-gray-600">{enrollment.progress}%</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <select
-                        value={enrollment.status}
-                        onChange={(e) => updateEnrollmentStatus(enrollment.id, e.target.value)}
-                        className={`text-xs font-semibold px-3 py-1 rounded capitalize cursor-pointer border-0 ${getStatusColor(enrollment.status)}`}
-                      >
-                        <option value="active">Active</option>
-                        <option value="completed">Completed</option>
-                        <option value="dropped">Dropped</option>
-                        <option value="expired">Expired</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        {new Date(enrollment.enrolled_at).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => openModal(enrollment)}
-                        className="inline-flex items-center text-blue-600 hover:text-blue-700"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(enrollment.id)}
-                        className="inline-flex items-center text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-10 w-10 border-4 border-brand-500/20 border-t-brand-500 mb-3"></div>
+              <p className="text-slate-400 font-semibold text-xs">Loading enrollment records...</p>
+            </div>
+          ) : filteredEnrollments.length === 0 ? (
+            <div className="p-12 text-center">
+              <GraduationCap className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+              <h3 className="text-base font-bold text-slate-900 mb-1">No enrollment records found</h3>
+              <p className="text-xs text-slate-500">Try adjusting your filters or manually enroll a student.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                    <th className="py-4 px-6">Student</th>
+                    <th className="py-4 px-6">Enrolled Course</th>
+                    <th className="py-4 px-6">Status</th>
+                    <th className="py-4 px-6">Enrolled Date</th>
+                    <th className="py-4 px-6 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-sm">
+                  {filteredEnrollments.map((enrollment) => (
+                    <tr key={enrollment.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                            {enrollment.users?.name?.charAt(0) || 'S'}
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900">{enrollment.users?.name || 'Registered Student'}</p>
+                            <p className="text-xs text-slate-400">{enrollment.users?.email}</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-6 font-bold text-slate-900">
+                        {enrollment.courses?.title || 'Selected Course'}
+                      </td>
+
+                      <td className="py-4 px-6">
+                        <span className={`inline-flex px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider rounded-full ${
+                          enrollment.status === 'completed'
+                            ? 'bg-brand-100 text-brand-700 border border-brand-200'
+                            : enrollment.status === 'active'
+                            ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {enrollment.status || 'Active'}
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-6 text-xs text-slate-500 font-medium">
+                        {enrollment.enrolled_at ? new Date(enrollment.enrolled_at).toLocaleDateString() : 'N/A'}
+                      </td>
+
+                      <td className="py-4 px-6 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => openModal(enrollment)}
+                            className="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200"
+                            title="Edit Enrollment"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            onClick={() => handleDelete(enrollment.id)}
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors border border-slate-200"
+                            title="Remove Enrollment"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Modal */}
+      {/* Enrollment Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-lg w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">
-                {editingEnrollment ? 'Edit Enrollment' : 'Enroll Student'}
-              </h3>
-              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
-                <X className="h-6 w-6" />
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+              <div>
+                <h3 className="text-xl font-playfair font-bold text-slate-900">
+                  {editingEnrollment ? 'Edit Enrollment' : 'Enroll Student'}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">Assign student to a course curriculum</p>
+              </div>
+              <button 
+                onClick={closeModal} 
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Student *
-                </label>
-                <select
-                  required
-                  value={formData.user_id}
-                  onChange={(e) => setFormData({ ...formData, user_id: e.target.value })}
-                  disabled={!!editingEnrollment}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
-                >
-                  <option value="">Select a student...</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name} ({user.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {!editingEnrollment ? (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                      Select Student *
+                    </label>
+                    <select
+                      required
+                      value={formData.user_id}
+                      onChange={(e) => setFormData({ ...formData, user_id: e.target.value })}
+                      className="w-full px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    >
+                      <option value="">Select a student...</option>
+                      {users.map(u => (
+                        <option key={u.id} value={u.id}>{u.name || u.email} ({u.email})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                      Select Course *
+                    </label>
+                    <select
+                      required
+                      value={formData.course_id}
+                      onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
+                      className="w-full px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    >
+                      <option value="">Select a course...</option>
+                      {courses.map(c => (
+                        <option key={c.id} value={c.id}>{c.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              ) : (
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 mb-4">
+                  <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Student</p>
+                  <p className="text-sm font-bold text-slate-900 mb-2">{editingEnrollment.users?.name} ({editingEnrollment.users?.email})</p>
+                  <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Course</p>
+                  <p className="text-sm font-bold text-brand-600">{editingEnrollment.courses?.title}</p>
+                </div>
+              )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Course *
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Enrollment Status
                 </label>
                 <select
-                  required
-                  value={formData.course_id}
-                  onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
-                  disabled={!!editingEnrollment}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
-                >
-                  <option value="">Select a course...</option>
-                  {courses.map((course) => (
-                    <option key={course.id} value={course.id}>
-                      {course.title} {course.is_premium ? '(Premium)' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status *
-                </label>
-                <select
-                  required
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
                 >
-                  <option value="active">Active</option>
-                  <option value="completed">Completed</option>
-                  <option value="dropped">Dropped</option>
-                  <option value="expired">Expired</option>
+                  <option value="active">Active Learner</option>
+                  <option value="completed">Completed / Graduated</option>
+                  <option value="dropped">Dropped / Inactive</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Progress (%) *
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  required
-                  value={formData.progress}
-                  onChange={(e) => setFormData({ ...formData, progress: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="0-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Expiry Date (optional)
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Access Expiration Date (Optional)
                 </label>
                 <input
                   type="date"
                   value={formData.expires_at}
                   onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              {/* Modal Actions */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                  className="px-5 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-100 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium disabled:opacity-50"
+                  className="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-brand-500/25 transition-colors flex items-center gap-2"
                 >
-                  {loading ? 'Saving...' : editingEnrollment ? 'Update' : 'Enroll'}
+                  {loading ? (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" />
+                      <span>{editingEnrollment ? 'Save Status' : 'Enroll Student'}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

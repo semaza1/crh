@@ -3,13 +3,16 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { 
   BookOpen, FileText, Plus, Edit, Trash2, Search, X, Check, AlertCircle, 
-  ExternalLink, Video, File, Wrench, FileCode, Star, Upload
+  ExternalLink, Video, File, Wrench, FileCode, Star, Upload, ArrowLeft,
+  Download
 } from 'lucide-react';
 
 const ManageResourcesPage = () => {
   const [resources, setResources] = useState([]);
   const [filteredResources, setFilteredResources] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingResource, setEditingResource] = useState(null);
@@ -30,19 +33,27 @@ const ManageResourcesPage = () => {
   }, []);
 
   useEffect(() => {
+    let filtered = [...resources];
+
     if (searchTerm) {
-      setFilteredResources(
-        resources.filter(resource =>
-          resource.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          resource.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          resource.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          resource.resource_type?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+      filtered = filtered.filter(resource =>
+        resource.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        resource.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        resource.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        resource.resource_type?.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    } else {
-      setFilteredResources(resources);
     }
-  }, [searchTerm, resources]);
+
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(resource => resource.category === selectedCategory);
+    }
+
+    if (selectedType !== 'all') {
+      filtered = filtered.filter(resource => resource.resource_type === selectedType);
+    }
+
+    setFilteredResources(filtered);
+  }, [searchTerm, selectedCategory, selectedType, resources]);
 
   const fetchResources = async () => {
     try {
@@ -83,7 +94,12 @@ const ManageResourcesPage = () => {
         .from('resources')
         .getPublicUrl(filePath);
 
-      setFormData({ ...formData, file_url: publicUrl });
+      setFormData(prev => ({
+        ...prev,
+        file_url: publicUrl,
+        link: publicUrl
+      }));
+
       showMessage('success', 'File uploaded successfully!');
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -98,20 +114,10 @@ const ManageResourcesPage = () => {
     setLoading(true);
 
     try {
-      const resourceData = {
-        category: formData.category || null,
-        title: formData.title,
-        description: formData.description,
-        link: formData.link,
-        file_url: formData.file_url || null,
-        resource_type: formData.resource_type,
-        is_featured: formData.is_featured
-      };
-
       if (editingResource) {
         const { error } = await supabase
           .from('resources')
-          .update(resourceData)
+          .update(formData)
           .eq('id', editingResource.id);
 
         if (error) throw error;
@@ -119,7 +125,7 @@ const ManageResourcesPage = () => {
       } else {
         const { error } = await supabase
           .from('resources')
-          .insert([resourceData]);
+          .insert([formData]);
 
         if (error) throw error;
         showMessage('success', 'Resource created successfully!');
@@ -157,17 +163,33 @@ const ManageResourcesPage = () => {
     }
   };
 
+  const toggleFeatured = async (resource) => {
+    try {
+      const { error } = await supabase
+        .from('resources')
+        .update({ is_featured: !resource.is_featured })
+        .eq('id', resource.id);
+
+      if (error) throw error;
+      showMessage('success', `Resource ${!resource.is_featured ? 'marked as featured' : 'unfeatured'}`);
+      fetchResources();
+    } catch (error) {
+      console.error('Error updating featured status:', error);
+      showMessage('error', 'Failed to update featured status');
+    }
+  };
+
   const openModal = (resource = null) => {
     if (resource) {
       setEditingResource(resource);
       setFormData({
         category: resource.category || '',
         title: resource.title,
-        description: resource.description,
-        link: resource.link,
+        description: resource.description || '',
+        link: resource.link || '',
         file_url: resource.file_url || '',
-        resource_type: resource.resource_type,
-        is_featured: resource.is_featured
+        resource_type: resource.resource_type || 'document',
+        is_featured: resource.is_featured || false
       });
     } else {
       setEditingResource(null);
@@ -196,196 +218,216 @@ const ManageResourcesPage = () => {
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    setTimeout(() => setMessage({ type: '', text: '' }), 4000);
   };
 
   const getResourceIcon = (type) => {
     switch (type) {
-      case 'video':
-        return <Video className="h-5 w-5" />;
-      case 'document':
-        return <FileText className="h-5 w-5" />;
-      case 'tool':
-        return <Wrench className="h-5 w-5" />;
-      case 'template':
-        return <FileCode className="h-5 w-5" />;
-      case 'article':
-        return <File className="h-5 w-5" />;
-      default:
-        return <FileText className="h-5 w-5" />;
+      case 'video': return <Video className="h-5 w-5" />;
+      case 'document': return <FileText className="h-5 w-5" />;
+      case 'tool': return <Wrench className="h-5 w-5" />;
+      case 'template': return <FileCode className="h-5 w-5" />;
+      case 'article': return <FileText className="h-5 w-5" />;
+      default: return <File className="h-5 w-5" />;
     }
   };
 
-  const getResourceColor = (type) => {
-    switch (type) {
-      case 'video':
-        return 'bg-red-100 text-red-600';
-      case 'document':
-        return 'bg-blue-100 text-blue-600';
-      case 'tool':
-        return 'bg-green-100 text-green-600';
-      case 'template':
-        return 'bg-purple-100 text-purple-600';
-      case 'article':
-        return 'bg-yellow-100 text-yellow-600';
-      default:
-        return 'bg-gray-100 text-gray-600';
-    }
-  };
-
-  const categories = [...new Set(resources.map(r => r.category).filter(Boolean))];
+  const categories = ['all', ...new Set(resources.map(r => r.category).filter(Boolean))];
+  const resourceTypes = ['all', 'article', 'video', 'document', 'tool', 'template', 'other'];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <BookOpen className="h-8 w-8 text-purple-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">CRH Admin</span>
-            </div>
-            <Link to="/admin/dashboard" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium">
-              ← Back to Dashboard
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-brand-500 selection:text-white">
+      {/* Top Banner Header */}
+      <div className="relative bg-slate-900 text-white overflow-hidden py-14 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-900/50 via-slate-900 to-slate-900 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <Link 
+              to="/admin/dashboard" 
+              className="inline-flex items-center text-sm font-semibold text-brand-400 hover:text-brand-300 transition-colors mb-3 group"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1.5 transform group-hover:-translate-x-1 transition-transform" />
+              Back to Command Center
             </Link>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-playfair font-bold text-white tracking-tight">
+              Career <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">Resources</span>
+            </h1>
+            <p className="text-slate-400 mt-2 text-base font-medium">
+              Upload roadmaps, downloadable handbooks, video guides, and templates for students.
+            </p>
           </div>
+
+          <button
+            onClick={() => openModal()}
+            className="px-6 py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-2xl shadow-lg shadow-brand-600/30 transition-all flex items-center justify-center gap-2 shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add New Resource</span>
+          </button>
         </div>
-      </nav>
+      </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Resources</h1>
-          <p className="text-gray-600">Create and manage career resources for students</p>
-        </div>
-
-        {/* Message */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Toast Feedback */}
         {message.text && (
-          <div className={`mb-6 rounded-lg p-4 flex items-center ${
+          <div className={`mb-6 rounded-2xl p-4 flex items-center shadow-lg animate-fade-in ${
             message.type === 'success' 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-red-50 border border-red-200'
+              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-700' 
+              : 'bg-red-500/10 border border-red-500/30 text-red-700'
           }`}>
             {message.type === 'success' ? (
-              <Check className="h-5 w-5 text-green-600 mr-3" />
+              <Check className="h-5 w-5 mr-3 shrink-0 text-emerald-600" />
             ) : (
-              <AlertCircle className="h-5 w-5 text-red-600 mr-3" />
+              <AlertCircle className="h-5 w-5 mr-3 shrink-0 text-red-600" />
             )}
-            <p className={`text-sm ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
-              {message.text}
-            </p>
+            <p className="text-sm font-bold">{message.text}</p>
           </div>
         )}
 
-        {/* Actions Bar */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search resources..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-            </div>
-            <button
-              onClick={() => openModal()}
-              className="flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors"
+        {/* Toolbar & Filters */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search resources by title, category, format..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-semibold text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none transition-colors"
             >
-              <Plus className="h-5 w-5 mr-2" />
-              Add Resource
-            </button>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>
+                  {cat === 'all' ? 'All Categories' : cat}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-semibold text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none transition-colors"
+            >
+              {resourceTypes.map(type => (
+                <option key={type} value={type}>
+                  {type === 'all' ? 'All Formats' : type.charAt(0).toUpperCase() + type.slice(1)}
+                </option>
+              ))}
+            </select>
+
+            <span className="text-xs font-bold text-slate-400">
+              {filteredResources.length} {filteredResources.length === 1 ? 'item' : 'items'}
+            </span>
           </div>
         </div>
 
         {/* Resources Grid */}
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-brand-500/20 border-t-brand-500 mb-3"></div>
+            <p className="text-slate-400 font-semibold text-xs">Loading resource library...</p>
           </div>
         ) : filteredResources.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {searchTerm ? 'No resources found' : 'No resources yet'}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {searchTerm ? 'Try a different search term' : 'Get started by creating your first resource'}
+          <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 shadow-sm max-w-md mx-auto">
+            <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <FileText className="h-8 w-8" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">No resources match</h3>
+            <p className="text-slate-500 text-sm font-medium mb-6">
+              Try adjusting your search keywords or create a new resource asset.
             </p>
-            {!searchTerm && (
-              <button
-                onClick={() => openModal()}
-                className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Create Resource
-              </button>
-            )}
+            <button
+              onClick={() => openModal()}
+              className="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-xl shadow-md shadow-brand-500/25 transition-colors inline-flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add Resource</span>
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredResources.map((resource) => (
-              <div key={resource.id} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow relative">
-                {resource.is_featured && (
-                  <div className="absolute top-3 right-3">
-                    <Star className="h-5 w-5 text-yellow-500 fill-current" />
-                  </div>
-                )}
+              <div
+                key={resource.id}
+                className="bg-white rounded-3xl p-6 border border-slate-200/80 hover:border-brand-500/40 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="p-3 rounded-2xl bg-brand-50 text-brand-600">
+                      {getResourceIcon(resource.resource_type)}
+                    </div>
 
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-2 rounded-lg ${getResourceColor(resource.resource_type)}`}>
-                    {getResourceIcon(resource.resource_type)}
+                    <button
+                      onClick={() => toggleFeatured(resource)}
+                      className={`p-2 rounded-xl transition-colors ${
+                        resource.is_featured
+                          ? 'bg-amber-100 text-amber-600'
+                          : 'bg-slate-50 text-slate-300 hover:text-amber-500'
+                      }`}
+                      title={resource.is_featured ? 'Remove from featured' : 'Mark as featured'}
+                    >
+                      <Star className="h-5 w-5 fill-current" />
+                    </button>
                   </div>
+
                   {resource.category && (
-                    <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-1 rounded">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-600 mb-2">
                       {resource.category}
                     </span>
                   )}
+
+                  <h3 className="text-base font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-brand-600 transition-colors leading-snug">
+                    {resource.title}
+                  </h3>
+                  <p className="text-xs font-medium text-slate-500 mb-4 line-clamp-3 leading-relaxed">
+                    {resource.description}
+                  </p>
                 </div>
 
-                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
-                  {resource.title}
-                </h3>
-                <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-                  {resource.description}
-                </p>
-
-                <div className="mb-4">
-                  <span className="inline-block px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded capitalize">
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-50 text-purple-700">
                     {resource.resource_type}
                   </span>
-                </div>
 
-                {resource.link && (
-                  <a
-                    href={resource.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 mb-4"
-                  >
-                    View Link
-                    <ExternalLink className="ml-1 h-3 w-3" />
-                  </a>
-                )}
+                  <div className="flex items-center gap-1.5">
+                    {resource.link && (
+                      <a
+                        href={resource.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200"
+                        title="Open Resource Link"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
 
-                <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
-                  <button
-                    onClick={() => openModal(resource)}
-                    className="flex-1 flex items-center justify-center px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg font-medium transition-colors"
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(resource.id)}
-                    className="flex-1 flex items-center justify-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
-                  </button>
+                    <button
+                      onClick={() => openModal(resource)}
+                      className="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200"
+                      title="Edit Resource"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(resource.id)}
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors border border-slate-200"
+                      title="Delete Resource"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -393,148 +435,151 @@ const ManageResourcesPage = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Create / Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 my-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">
-                {editingResource ? 'Edit Resource' : 'Create Resource'}
-              </h3>
-              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
-                <X className="h-6 w-6" />
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 my-8 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+              <div>
+                <h3 className="text-xl font-playfair font-bold text-slate-900">
+                  {editingResource ? 'Edit Resource' : 'Add New Resource'}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">Add learning materials and career assets</p>
+              </div>
+              <button 
+                onClick={closeModal} 
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Resource Type *
-                  </label>
-                  <select
-                    required
-                    value={formData.resource_type}
-                    onChange={(e) => setFormData({ ...formData, resource_type: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="article">Article</option>
-                    <option value="video">Video</option>
-                    <option value="document">Document</option>
-                    <option value="tool">Tool</option>
-                    <option value="template">Template</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Career, Resume, Interview, etc."
-                    list="categories"
-                  />
-                  <datalist id="categories">
-                    {categories.map(cat => (
-                      <option key={cat} value={cat} />
-                    ))}
-                  </datalist>
-                </div>
-              </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Title *
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Resource Title *
                 </label>
                 <input
                   type="text"
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Resource Title"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                  placeholder="e.g. Modern Web Engineering Cheat Sheet 2026"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description *
-                </label>
-                <textarea
-                  required
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Detailed description of the resource..."
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Category Tag
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                    placeholder="e.g. Engineering, Design, College Prep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Resource Format Type
+                  </label>
+                  <select
+                    value={formData.resource_type}
+                    onChange={(e) => setFormData({ ...formData, resource_type: e.target.value })}
+                    className="w-full px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  >
+                    <option value="document">Document (PDF/Doc)</option>
+                    <option value="template">Template / Code Boilerplate</option>
+                    <option value="tool">Software / Tool</option>
+                    <option value="article">Article / Guide</option>
+                    <option value="video">Video Recording</option>
+                    <option value="other">Other Asset</option>
+                  </select>
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  External Link (URL) *
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Asset URL or External Link
                 </label>
                 <input
                   type="url"
-                  required
                   value={formData.link}
                   onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="https://example.com/resource"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                  placeholder="https://..."
                 />
               </div>
 
+              {/* Upload to Storage File */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload File (Optional)
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Or Upload Direct File to Cloud Storage
                 </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="file"
-                    onChange={handleFileUpload}
-                    disabled={uploading}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
-                  />
-                  {uploading && <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>}
-                </div>
-                {formData.file_url && (
-                  <p className="mt-2 text-sm text-green-600">File uploaded successfully!</p>
+                <input
+                  type="file"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-600 file:text-white hover:file:bg-brand-500 cursor-pointer"
+                />
+                {uploading && (
+                  <p className="text-xs text-brand-600 font-semibold mt-1">Uploading file to storage bucket...</p>
                 )}
               </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="is_featured"
-                  checked={formData.is_featured}
-                  onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                />
-                <label htmlFor="is_featured" className="ml-2 text-sm text-gray-700 flex items-center">
-                  <Star className="h-4 w-4 mr-1 text-yellow-500" />
-                  Mark as Featured Resource
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Description
                 </label>
+                <textarea
+                  rows="3"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                  placeholder="Summarize the resource content and who benefits from reading it..."
+                />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              {/* Featured Switch */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900">Featured Resource</h4>
+                  <p className="text-xs text-slate-500">Pin this asset to the top highlighted carousel</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.is_featured}
+                  onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                  className="w-5 h-5 text-brand-600 rounded-lg focus:ring-brand-500 cursor-pointer"
+                />
+              </div>
+
+              {/* Modal Actions */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                  className="px-5 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-100 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || uploading}
-                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium disabled:opacity-50"
+                  disabled={loading}
+                  className="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-brand-500/25 transition-colors flex items-center gap-2"
                 >
-                  {loading ? 'Saving...' : editingResource ? 'Update Resource' : 'Create Resource'}
+                  {loading ? (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" />
+                      <span>{editingResource ? 'Save Changes' : 'Create Resource'}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

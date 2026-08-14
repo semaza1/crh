@@ -3,7 +3,8 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { 
   BookOpen, Plus, Edit, Trash2, X, Check, AlertCircle, 
-  ArrowUp, ArrowDown, Video, Clock, Eye, FileText, GripVertical
+  ArrowUp, ArrowDown, Video, Clock, Eye, FileText, ArrowLeft,
+  Sparkles, Layers
 } from 'lucide-react';
 
 const ManageLessonsPage = () => {
@@ -65,7 +66,7 @@ const ManageLessonsPage = () => {
       const lessonData = {
         ...formData,
         course_id: courseId,
-        duration: parseInt(formData.duration),
+        duration: parseInt(formData.duration) || 0,
       };
 
       if (editingLesson) {
@@ -77,9 +78,8 @@ const ManageLessonsPage = () => {
         if (error) throw error;
         showMessage('success', 'Lesson updated successfully!');
       } else {
-        // Get the next order_index
         const maxOrder = lessons.length > 0 
-          ? Math.max(...lessons.map(l => l.order_index)) 
+          ? Math.max(...lessons.map(l => l.order_index || 0)) 
           : -1;
 
         const { error } = await supabase
@@ -125,42 +125,31 @@ const ManageLessonsPage = () => {
     }
   };
 
-  const handleReorder = async (lessonId, direction) => {
-    const currentIndex = lessons.findIndex(l => l.id === lessonId);
-    if (
-      (direction === 'up' && currentIndex === 0) ||
-      (direction === 'down' && currentIndex === lessons.length - 1)
-    ) {
-      return;
-    }
+  const handleMoveOrder = async (lesson, direction) => {
+    const currentIndex = lessons.findIndex(l => l.id === lesson.id);
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
 
-    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    const reorderedLessons = [...lessons];
-    const [movedLesson] = reorderedLessons.splice(currentIndex, 1);
-    reorderedLessons.splice(newIndex, 0, movedLesson);
+    if (targetIndex < 0 || targetIndex >= lessons.length) return;
 
-    // Update order_index for all affected lessons
+    const targetLesson = lessons[targetIndex];
+
     try {
-      const updates = reorderedLessons.map((lesson, index) => ({
-        id: lesson.id,
-        order_index: index
-      }));
-
-      for (const update of updates) {
-        const { error } = await supabase
+      // Swap order indices
+      await Promise.all([
+        supabase
           .from('lessons')
-          .update({ order_index: update.order_index })
-          .eq('id', update.id);
+          .update({ order_index: targetLesson.order_index })
+          .eq('id', lesson.id),
+        supabase
+          .from('lessons')
+          .update({ order_index: lesson.order_index })
+          .eq('id', targetLesson.id)
+      ]);
 
-        if (error) throw error;
-      }
-
-      setLessons(reorderedLessons);
-      showMessage('success', 'Lesson order updated!');
-    } catch (error) {
-      console.error('Error reordering lessons:', error);
-      showMessage('error', 'Failed to reorder lessons');
       fetchCourseAndLessons();
+    } catch (error) {
+      console.error('Error updating order:', error);
+      showMessage('error', 'Failed to reorder lessons');
     }
   };
 
@@ -169,11 +158,11 @@ const ManageLessonsPage = () => {
       setEditingLesson(lesson);
       setFormData({
         title: lesson.title,
-        description: lesson.description,
-        content: lesson.content,
-        video_url: lesson.video_url,
-        duration: lesson.duration,
-        is_preview: lesson.is_preview
+        description: lesson.description || '',
+        content: lesson.content || '',
+        video_url: lesson.video_url || '',
+        duration: lesson.duration || 0,
+        is_preview: lesson.is_preview || false
       });
     } else {
       setEditingLesson(null);
@@ -201,218 +190,204 @@ const ManageLessonsPage = () => {
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-  };
-
-  const formatDuration = (minutes) => {
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    setTimeout(() => setMessage({ type: '', text: '' }), 4000);
   };
 
   if (loading && !course) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
-
-  if (!course) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Course Not Found</h2>
-          <Link to="/admin/courses" className="text-purple-600 hover:text-purple-700">
-            ← Back to Courses
-          </Link>
-        </div>
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-500/20 border-t-brand-500 mb-4"></div>
+        <p className="text-slate-400 font-semibold text-sm">Loading course curriculum...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <BookOpen className="h-8 w-8 text-purple-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">CRH Admin</span>
-            </div>
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-brand-500 selection:text-white">
+      {/* Top Banner Header */}
+      <div className="relative bg-slate-900 text-white overflow-hidden py-14 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-900/50 via-slate-900 to-slate-900 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
             <Link 
               to="/admin/courses" 
-              className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium"
+              className="inline-flex items-center text-sm font-semibold text-brand-400 hover:text-brand-300 transition-colors mb-3 group"
             >
-              ← Back to Courses
+              <ArrowLeft className="h-4 w-4 mr-1.5 transform group-hover:-translate-x-1 transition-transform" />
+              Back to Courses List
             </Link>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-playfair font-bold text-white tracking-tight">
+              Curriculum: <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">{course?.title}</span>
+            </h1>
+            <p className="text-slate-400 mt-2 text-base font-medium max-w-xl">
+              Arrange lesson sequencing, video playback links, markdown summaries, and free previews.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => openModal()}
+              className="px-6 py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-2xl shadow-lg shadow-brand-600/30 transition-all flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add New Lesson</span>
+            </button>
           </div>
         </div>
-      </nav>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Course Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{course.title}</h1>
-              <p className="text-gray-600 mb-4">{course.description}</p>
-              <div className="flex items-center gap-4 text-sm text-gray-500">
-                <span className="flex items-center">
-                  <Clock className="h-4 w-4 mr-1" />
-                  {course.duration}
-                </span>
-                <span className="capitalize">{course.level}</span>
-                <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                  course.is_premium ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {course.is_premium ? `Premium ($${course.price})` : 'Free'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Messages */}
+      {/* Main Content */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Toast Feedback */}
         {message.text && (
-          <div className={`mb-6 rounded-lg p-4 flex items-center ${
+          <div className={`mb-6 rounded-2xl p-4 flex items-center shadow-lg animate-fade-in ${
             message.type === 'success' 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-red-50 border border-red-200'
+              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-700' 
+              : 'bg-red-500/10 border border-red-500/30 text-red-700'
           }`}>
             {message.type === 'success' ? (
-              <Check className="h-5 w-5 text-green-600 mr-3" />
+              <Check className="h-5 w-5 mr-3 shrink-0 text-emerald-600" />
             ) : (
-              <AlertCircle className="h-5 w-5 text-red-600 mr-3" />
+              <AlertCircle className="h-5 w-5 mr-3 shrink-0 text-red-600" />
             )}
-            <p className={`text-sm ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
-              {message.text}
-            </p>
+            <p className="text-sm font-bold">{message.text}</p>
           </div>
         )}
 
-        {/* Lessons Header */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex items-center justify-between">
+        {/* Stats Summary Bar */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Course Lessons</h2>
-              <p className="text-sm text-gray-600 mt-1">
-                {lessons.length} {lessons.length === 1 ? 'lesson' : 'lessons'}
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Total Lessons</p>
+              <p className="text-2xl font-extrabold text-slate-900">{lessons.length}</p>
+            </div>
+            <div className="p-3 bg-brand-50 rounded-2xl text-brand-600">
+              <BookOpen className="h-6 w-6" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Total Video Time</p>
+              <p className="text-2xl font-extrabold text-slate-900">
+                {lessons.reduce((acc, l) => acc + (l.duration || 0), 0)} mins
               </p>
             </div>
-            <button
-              onClick={() => openModal()}
-              className="flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Add Lesson
-            </button>
+            <div className="p-3 bg-purple-50 rounded-2xl text-purple-600">
+              <Clock className="h-6 w-6" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Free Previews</p>
+              <p className="text-2xl font-extrabold text-emerald-600">
+                {lessons.filter(l => l.is_preview).length}
+              </p>
+            </div>
+            <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
+              <Eye className="h-6 w-6" />
+            </div>
           </div>
         </div>
 
         {/* Lessons List */}
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-          </div>
-        ) : lessons.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No lessons yet</h3>
-            <p className="text-gray-600 mb-6">Start building your course by adding lessons</p>
+        {lessons.length === 0 ? (
+          <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 shadow-sm">
+            <div className="w-16 h-16 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Video className="h-8 w-8" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">No lessons created yet</h3>
+            <p className="text-slate-500 text-sm font-medium mb-6">
+              Start building your course syllabus by adding the introductory video or reading module.
+            </p>
             <button
               onClick={() => openModal()}
-              className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              className="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-xl shadow-md shadow-brand-500/25 transition-colors inline-flex items-center gap-2"
             >
-              <Plus className="h-5 w-5 mr-2" />
-              Create First Lesson
+              <Plus className="h-4 w-4" />
+              <span>Add First Lesson</span>
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {lessons.map((lesson, index) => (
+          <div className="space-y-3.5">
+            {lessons.map((lesson, idx) => (
               <div
                 key={lesson.id}
-                className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-5"
+                className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 hover:border-brand-500/40 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
-                <div className="flex items-start gap-4">
-                  {/* Order Controls */}
-                  <div className="flex flex-col gap-1 pt-1">
+                {/* Left Info */}
+                <div className="flex items-start sm:items-center gap-4 flex-1 min-w-0">
+                  {/* Step / Order Bubble */}
+                  <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 font-extrabold text-sm flex items-center justify-center shrink-0 border border-slate-200">
+                    {idx + 1}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h4 className="font-bold text-slate-900 text-base truncate">{lesson.title}</h4>
+                      {lesson.is_preview && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-200">
+                          Free Preview
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-4 text-xs font-semibold text-slate-400">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5 text-brand-600" />
+                        <span>{lesson.duration || 0} minutes</span>
+                      </div>
+                      {lesson.video_url && (
+                        <div className="flex items-center gap-1 text-purple-600">
+                          <Video className="h-3.5 w-3.5" />
+                          <span className="truncate max-w-[200px]">{lesson.video_url}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions & Reordering */}
+                <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                  {/* Reorder Buttons */}
+                  <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
                     <button
-                      onClick={() => handleReorder(lesson.id, 'up')}
-                      disabled={index === 0}
-                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Move up"
+                      onClick={() => handleMoveOrder(lesson, 'up')}
+                      disabled={idx === 0}
+                      className="p-1.5 rounded-lg text-slate-600 hover:text-brand-600 hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                      title="Move Up"
                     >
                       <ArrowUp className="h-4 w-4" />
                     </button>
-                    <GripVertical className="h-4 w-4 text-gray-300" />
                     <button
-                      onClick={() => handleReorder(lesson.id, 'down')}
-                      disabled={index === lessons.length - 1}
-                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Move down"
+                      onClick={() => handleMoveOrder(lesson, 'down')}
+                      disabled={idx === lessons.length - 1}
+                      className="p-1.5 rounded-lg text-slate-600 hover:text-brand-600 hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                      title="Move Down"
                     >
                       <ArrowDown className="h-4 w-4" />
                     </button>
                   </div>
 
-                  {/* Lesson Number */}
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">
-                      {index + 1}
-                    </div>
-                  </div>
+                  {/* Edit / Delete */}
+                  <button
+                    onClick={() => openModal(lesson)}
+                    className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-brand-600 rounded-xl transition-colors border border-slate-200"
+                    title="Edit Lesson"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
 
-                  {/* Lesson Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {lesson.title}
-                          {lesson.is_preview && (
-                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                              <Eye className="h-3 w-3 mr-1" />
-                              Preview
-                            </span>
-                          )}
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                          {lesson.description}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span className="flex items-center">
-                            <Video className="h-4 w-4 mr-1" />
-                            Video
-                          </span>
-                          <span className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            {formatDuration(lesson.duration)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => openModal(lesson)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit lesson"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(lesson.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete lesson"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <button
+                    onClick={() => handleDelete(lesson.id)}
+                    className="p-2.5 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-xl transition-colors border border-slate-200"
+                    title="Delete Lesson"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             ))}
@@ -420,22 +395,28 @@ const ManageLessonsPage = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Lesson Creation / Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-3xl w-full p-6 my-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">
-                {editingLesson ? 'Edit Lesson' : 'Create Lesson'}
-              </h3>
-              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
-                <X className="h-6 w-6" />
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 my-8 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+              <div>
+                <h3 className="text-xl font-playfair font-bold text-slate-900">
+                  {editingLesson ? 'Edit Lesson' : 'Create New Lesson'}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">Configure video content and study materials</p>
+              </div>
+              <button 
+                onClick={closeModal} 
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                   Lesson Title *
                 </label>
                 <input
@@ -443,97 +424,102 @@ const ManageLessonsPage = () => {
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Introduction to React Hooks"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                  placeholder="e.g. Setting Up the Development Environment"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description *
-                </label>
-                <textarea
-                  required
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Brief description of what students will learn..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Lesson Content *
-                </label>
-                <textarea
-                  required
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  rows="6"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Detailed lesson content, notes, and resources..."
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Video URL *
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Video Stream URL
                   </label>
                   <input
                     type="url"
-                    required
                     value={formData.video_url}
                     onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="https://youtube.com/watch?v=..."
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                    placeholder="https://commondatastorage.googleapis.com/... or youtube/vimeo"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Duration (minutes) *
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Duration (Minutes)
                   </label>
                   <input
                     type="number"
-                    required
-                    min="1"
+                    min="0"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="45"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                    placeholder="15"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="is_preview"
-                  checked={formData.is_preview}
-                  onChange={(e) => setFormData({ ...formData, is_preview: e.target.checked })}
-                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                />
-                <label htmlFor="is_preview" className="ml-2 text-sm text-gray-700">
-                  Make this lesson available as a free preview
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Short Description
                 </label>
+                <input
+                  type="text"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                  placeholder="Brief summary of what this lesson covers..."
+                />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Detailed Lesson Notes (Markdown)
+                </label>
+                <textarea
+                  rows="4"
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all font-mono"
+                  placeholder="Key notes, code snippets, reference links..."
+                />
+              </div>
+
+              {/* Free Preview Toggle */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900">Enable Free Preview</h4>
+                  <p className="text-xs text-slate-500">Allow non-enrolled students to preview this lesson</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.is_preview}
+                  onChange={(e) => setFormData({ ...formData, is_preview: e.target.checked })}
+                  className="w-5 h-5 text-brand-600 rounded-lg focus:ring-brand-500 cursor-pointer"
+                />
+              </div>
+
+              {/* Modal Actions */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                  className="px-5 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-100 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium disabled:opacity-50"
+                  className="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-brand-500/25 transition-colors flex items-center gap-2"
                 >
-                  {loading ? 'Saving...' : editingLesson ? 'Update Lesson' : 'Create Lesson'}
+                  {loading ? (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" />
+                      <span>{editingLesson ? 'Save Changes' : 'Create Lesson'}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

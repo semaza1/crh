@@ -194,284 +194,281 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-500/20 border-t-brand-500 mb-4"></div>
+        <p className="text-slate-400 font-semibold text-sm">Loading user profile...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-4xl font-bold mb-2">My Profile</h1>
-          <p className="text-xl text-purple-100">Manage your account information</p>
-        </div>
-        {/* back to dashboard */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
-            <button onClick={() => navigate('/user/dashboard')} className="text-purple-200 hover:text-white flex items-center">
-                <X className="h-5 w-5 mr-1" />
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      {/* Top Banner Header */}
+      <div className="relative bg-slate-900 text-white overflow-hidden py-14 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-900/50 via-slate-900 to-slate-900 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <button 
+                onClick={() => navigate('/user/dashboard')} 
+                className="inline-flex items-center text-sm font-semibold text-brand-400 hover:text-brand-300 transition-colors mb-3 group"
+              >
+                <span className="transform group-hover:-translate-x-1 transition-transform mr-1.5">←</span>
                 Back to Dashboard
-            </button>
-        </div>    
+              </button>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-playfair font-bold text-white tracking-tight">
+                Account <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">Settings</span>
+              </h1>
+              <p className="text-slate-400 mt-2 text-base font-medium">
+                Manage your personal profile, credentials, and learning preferences.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-xs font-bold uppercase tracking-wider text-slate-200">
+                {formData.role === 'admin' ? '🛡️ Administrator' : '🎓 Student Member'}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Messages */}
         {message.text && (
-          <div className={`mb-6 rounded-lg p-4 flex items-center ${
+          <div className={`mb-8 rounded-2xl p-4 flex items-center shadow-lg animate-fade-in ${
             message.type === 'success' 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-red-50 border border-red-200'
+              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-700' 
+              : 'bg-red-500/10 border border-red-500/30 text-red-700'
           }`}>
             {message.type === 'success' ? (
-              <Check className="h-5 w-5 text-green-600 mr-3" />
+              <Check className="h-5 w-5 text-emerald-600 mr-3 shrink-0" />
             ) : (
-              <AlertCircle className="h-5 w-5 text-red-600 mr-3" />
+              <AlertCircle className="h-5 w-5 text-red-600 mr-3 shrink-0" />
             )}
-            <p className={`text-sm ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+            <p className="text-sm font-bold">
               {message.text}
             </p>
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Sidebar - Profile Card */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
-              {/* Avatar */}
+          {/* Left Sidebar - Profile Summary Card */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 sticky top-8">
+              {/* Avatar & Identifiers */}
               <div className="text-center mb-6">
-                <div className="relative inline-block">
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-r from-purple-400 to-indigo-400 flex items-center justify-center text-white text-4xl font-bold">
+                <div className="relative inline-block mb-4">
+                  <div className="w-28 h-28 rounded-3xl bg-gradient-to-tr from-brand-600 to-purple-600 flex items-center justify-center text-white text-3xl font-extrabold shadow-xl shadow-brand-500/20 border-4 border-white">
                     <span>{formData.name?.charAt(0)?.toUpperCase() || 'U'}</span>
                   </div>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mt-4">
+
+                <h2 className="text-2xl font-bold text-slate-900">
                   {formData.name || 'User'}
                 </h2>
-                <p className="text-gray-600">{formData.email}</p>
-                <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                  formData.role === 'admin' 
-                    ? 'bg-red-100 text-red-800' 
-                    : 'bg-blue-100 text-blue-800'
-                }`}>
-                  {formData.role === 'admin' ? 'Administrator' : 'Student'}
-                </span>
+                <p className="text-sm font-medium text-slate-500 mt-0.5">{formData.email}</p>
               </div>
 
-              {/* Stats */}
-              <div className="border-t border-gray-200 pt-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center text-gray-600">
-                    <BookOpen className="h-5 w-5 mr-2" />
-                    <span className="text-sm">Enrolled Courses</span>
+              {/* Learning Stats Grid */}
+              <div className="border-t border-slate-100 pt-6 space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-brand-100 text-brand-600">
+                      <BookOpen className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-600">Enrolled Courses</span>
                   </div>
-                  <span className="font-bold text-gray-900">{stats.enrolledCourses}</span>
+                  <span className="font-extrabold text-slate-900 text-sm">{stats.enrolledCourses}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center text-gray-600">
-                    <TrendingUp className="h-5 w-5 mr-2" />
-                    <span className="text-sm">Completed</span>
+
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
+                      <TrendingUp className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-600">Completed</span>
                   </div>
-                  <span className="font-bold text-gray-900">{stats.completedCourses}</span>
+                  <span className="font-extrabold text-slate-900 text-sm">{stats.completedCourses}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center text-gray-600">
-                    <Award className="h-5 w-5 mr-2" />
-                    <span className="text-sm">Certificates</span>
+
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-amber-100 text-amber-600">
+                      <Award className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-600">Certificates</span>
                   </div>
-                  <span className="font-bold text-gray-900">{stats.certificates}</span>
+                  <span className="font-extrabold text-slate-900 text-sm">{stats.certificates}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center text-gray-600">
-                    <Clock className="h-5 w-5 mr-2" />
-                    <span className="text-sm">Learning Hours</span>
+
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-purple-100 text-purple-600">
+                      <Clock className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-600">Study Hours</span>
                   </div>
-                  <span className="font-bold text-gray-900">{stats.totalLearningTime}h</span>
+                  <span className="font-extrabold text-slate-900 text-sm">{stats.totalLearningTime}h</span>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="border-t border-gray-200 pt-6 space-y-3">
+              {/* Password Action */}
+              <div className="border-t border-slate-100 pt-6">
                 <button
                   onClick={() => setShowPasswordModal(true)}
-                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-900 hover:text-white font-bold text-sm transition-all duration-200 shadow-sm"
                 >
-                  <Lock className="h-4 w-4 mr-2" />
-                  Change Password
+                  <Lock className="h-4 w-4 text-brand-600" />
+                  <span>Update Password</span>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Main Content - Profile Form */}
+          {/* Main Content - Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">Profile Information</h3>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Edit2 className="h-4 w-4 mr-1" />
-                  All fields are editable
+            <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200/80">
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+                    <span className="w-2.5 h-6 bg-brand-600 rounded-full"></span>
+                    Personal Details
+                  </h3>
+                  <p className="text-sm font-medium text-slate-500 mt-1">
+                    Keep your profile information accurate and updated.
+                  </p>
                 </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Name Field */}
+                {/* Full Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
                     Full Name *
                   </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <div className="relative group">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-brand-600 transition-colors" />
                     <input
                       type="text"
                       name="name"
                       required
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
                       placeholder="Enter your full name"
                     />
                   </div>
                 </div>
 
-                {/* Email Field (Read-only) */}
+                {/* Email (Read Only) */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address (Cannot be changed)
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                    Email Address <span className="text-slate-400 font-normal lowercase">(read-only)</span>
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
                       disabled
-                      className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                      className="w-full pl-12 pr-4 py-3.5 bg-slate-100/70 border border-slate-200 rounded-2xl font-medium text-slate-500 text-sm cursor-not-allowed"
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Email cannot be changed for security reasons
+                  <p className="mt-1.5 text-xs text-slate-400 font-medium">
+                    Email cannot be changed for security authentication integrity.
                   </p>
                 </div>
 
-                {/* Phone Field */}
+                {/* Phone */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
                     Phone Number
                   </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <div className="relative group">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-brand-600 transition-colors" />
                     <input
                       type="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Enter your phone number"
+                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                      placeholder="+250 7xx xxx xxx"
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Optional - Add your contact number
-                  </p>
                 </div>
 
-                {/* Interests Field */}
+                {/* Interests */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Interests
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                    Learning Interests & Career Goals
                   </label>
-                  <div className="relative">
-                    <Tag className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <div className="relative group">
+                    <Tag className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-brand-600 transition-colors" />
                     <textarea
                       name="interests"
-                      rows="4"
+                      rows="3"
                       value={formData.interests}
                       onChange={handleInputChange}
-                      className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="What are you interested in learning? (e.g., Web Development, Data Science, Design)"
+                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                      placeholder="e.g. Software Engineering, Digital Marketing, University Applications, Finance"
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Optional - Tell us what you're interested in learning
-                  </p>
                 </div>
 
-                {/* Role Field (Read-only) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Account Role (Cannot be changed)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.role === 'admin' ? 'Administrator' : 'Student'}
-                    disabled
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed capitalize"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Contact support to change your account role
-                  </p>
-                </div>
-
-                {/* Submit Button */}
-                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                {/* Submit Action */}
+                <div className="pt-4 border-t border-slate-100">
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 flex items-center justify-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium disabled:opacity-50 transition-colors"
+                    className="w-full sm:w-auto px-8 py-4 bg-brand-600 hover:bg-brand-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-brand-500/25 transition-all duration-300 flex items-center justify-center gap-2 transform hover:-translate-y-0.5 disabled:opacity-50"
                   >
                     {saving ? (
                       <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2"></div>
                         Saving Changes...
                       </>
                     ) : (
                       <>
-                        <Save className="h-5 w-5 mr-2" />
-                        Save Changes
+                        <Save className="h-4 w-4" />
+                        Save Profile Changes
                       </>
                     )}
                   </button>
                 </div>
               </form>
 
-              {/* Account Information */}
-              <div className="mt-8 pt-8 border-t border-gray-200">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-600 mb-1">Account ID</p>
-                    <p className="font-mono text-gray-900 text-xs">{userProfile.id}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600 mb-1">Account Type</p>
-                    <p className="text-gray-900 capitalize">{formData.role}</p>
-                  </div>
-                </div>
+              {/* Account Meta */}
+              <div className="mt-10 pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-semibold text-slate-400">
+                <span>Account ID: <code className="font-mono text-slate-600">{userProfile.id}</code></span>
+                <span>Role: <strong className="text-slate-700 capitalize">{formData.role}</strong></span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Password Change Modal */}
+      {/* Password Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Change Password</h3>
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-900">Update Password</h3>
               <button
                 onClick={() => setShowPasswordModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handlePasswordChange} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
                   New Password *
                 </label>
                 <input
@@ -479,23 +476,23 @@ const ProfilePage = () => {
                   required
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Enter new password"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white"
+                  placeholder="At least 6 characters"
                   minLength="6"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm New Password *
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                  Confirm Password *
                 </label>
                 <input
                   type="password"
                   required
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Confirm new password"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white"
+                  placeholder="Repeat new password"
                   minLength="6"
                 />
               </div>
@@ -504,16 +501,16 @@ const ProfilePage = () => {
                 <button
                   type="button"
                   onClick={() => setShowPasswordModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                  className="flex-1 py-3 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl font-bold text-sm transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium disabled:opacity-50"
+                  className="flex-1 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-sm shadow-md shadow-brand-500/20 transition-colors disabled:opacity-50"
                 >
-                  {saving ? 'Updating...' : 'Update Password'}
+                  {saving ? 'Updating...' : 'Save Password'}
                 </button>
               </div>
             </form>

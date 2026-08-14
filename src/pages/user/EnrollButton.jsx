@@ -71,7 +71,7 @@ const EnrollButton = ({ course, onEnrollSuccess }) => {
   return (
     <div>
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+        <div className="mb-4 p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-xs font-semibold text-red-600 animate-fade-in">
           {error}
         </div>
       )}
@@ -79,33 +79,33 @@ const EnrollButton = ({ course, onEnrollSuccess }) => {
       <button
         onClick={handleEnroll}
         disabled={loading}
-        className={`w-full py-3 rounded-lg font-medium transition-colors flex items-center justify-center ${
+        className={`w-full py-4 px-6 rounded-2xl font-bold text-base transition-all duration-300 flex items-center justify-center shadow-lg transform hover:-translate-y-0.5 ${
           course.is_premium
-            ? 'bg-yellow-500 text-white hover:bg-yellow-600'
-            : 'bg-purple-600 text-white hover:bg-purple-700'
-        } disabled:opacity-50 disabled:cursor-not-allowed`}
+            ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-amber-500/25'
+            : 'bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white shadow-brand-500/30'
+        } disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
       >
         {loading ? (
-          <>
-            <Loader className="h-5 w-5 mr-2 animate-spin" />
-            Processing...
-          </>
+          <div className="flex items-center gap-2">
+            <Loader className="h-5 w-5 animate-spin" />
+            <span>Processing Enrollment...</span>
+          </div>
         ) : course.is_premium ? (
-          <>
-            <Lock className="h-5 w-5 mr-2" />
-            Enroll for ${course.price}
-          </>
+          <div className="flex items-center gap-2">
+            <Lock className="h-5 w-5" />
+            <span>Unlock Course for ${course.price}</span>
+          </div>
         ) : (
-          <>
-            <Check className="h-5 w-5 mr-2" />
-            Enroll for Free
-          </>
+          <div className="flex items-center gap-2">
+            <Check className="h-5 w-5" />
+            <span>Enroll Now for Free</span>
+          </div>
         )}
       </button>
 
       {course.is_premium && (
-        <p className="text-xs text-gray-500 text-center mt-2">
-          You'll be redirected to complete payment
+        <p className="text-xs text-slate-400 font-medium text-center mt-3">
+          Instant lifetime access • 100% secure checkout
         </p>
       )}
     </div>

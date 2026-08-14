@@ -124,7 +124,7 @@ const PaymentPage = () => {
       }
 
       // Redirect to course with success message
-      navigate(`/courses/${courseId}?enrolled=true`);
+      navigate(`/user/course/${courseId}`);
     } catch (err) {
       console.error('Error processing payment:', err);
       setError('Payment failed. Please try again.');
@@ -134,19 +134,28 @@ const PaymentPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-500/20 border-t-brand-500 mb-4"></div>
+        <p className="text-slate-400 font-semibold text-sm">Preparing secure checkout...</p>
       </div>
     );
   }
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Course Not Found</h2>
-          <Link to="/courses" className="text-purple-600 hover:text-purple-700">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-3xl p-10 border border-slate-200 text-center max-w-md shadow-lg">
+          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="h-8 w-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Course Not Found</h2>
+          <p className="text-slate-500 text-sm font-medium mb-6">
+            The course you are attempting to purchase could not be retrieved.
+          </p>
+          <Link 
+            to="/user/course" 
+            className="inline-flex items-center justify-center px-6 py-3 bg-slate-900 hover:bg-brand-600 text-white font-bold rounded-xl transition-colors shadow-md"
+          >
             ← Back to Courses
           </Link>
         </div>
@@ -155,47 +164,59 @@ const PaymentPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link 
-          to={`/user/course/${courseId}`}
-          className="inline-flex items-center text-gray-600 hover:text-purple-600 mb-8 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Course
-        </Link>
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      {/* Checkout Banner */}
+      <div className="relative bg-slate-900 text-white overflow-hidden py-12 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-900/50 via-slate-900 to-slate-900 pointer-events-none"></div>
+        <div className="relative max-w-7xl mx-auto">
+          <Link 
+            to={`/user/course/${courseId}`} 
+            className="inline-flex items-center text-sm font-semibold text-slate-400 hover:text-brand-400 transition-colors mb-4 group"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2 transform group-hover:-translate-x-1 transition-transform" />
+            Back to Course Details
+          </Link>
+          <h1 className="text-3xl sm:text-4xl font-playfair font-bold text-white tracking-tight">
+            Secure <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">Checkout</span>
+          </h1>
+          <p className="text-slate-400 mt-1 text-sm font-medium">
+            Complete your enrollment to unlock immediate lifetime access.
+          </p>
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Payment Form */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* Payment Form (Left Col) */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm p-8">
-              <div className="flex items-center mb-6">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
-                  <CreditCard className="h-6 w-6 text-purple-600" />
+            <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200/80">
+              <div className="flex items-center gap-3.5 mb-8 pb-4 border-b border-slate-100">
+                <div className="w-12 h-12 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-600">
+                  <CreditCard className="h-6 w-6" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Payment Details</h2>
-                  <p className="text-sm text-gray-600">Complete your enrollment</p>
+                  <h2 className="text-xl font-bold text-slate-900">Payment Information</h2>
+                  <p className="text-xs text-slate-500 font-medium">Safe & encrypted 256-bit SSL transaction</p>
                 </div>
               </div>
 
               {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
-                  <AlertCircle className="h-5 w-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-red-700">{error}</p>
+                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-start text-red-700 text-sm font-semibold animate-fade-in">
+                  <AlertCircle className="h-5 w-5 mr-3 mt-0.5 shrink-0" />
+                  <p>{error}</p>
                 </div>
               )}
 
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <Lock className="h-4 w-4 inline mr-2" />
-                  This is a simulated payment. No actual charges will be made.
+              <div className="mb-8 p-4 bg-brand-50/60 border border-brand-100 rounded-2xl flex items-start gap-3">
+                <Lock className="h-4 w-4 text-brand-600 shrink-0 mt-0.5" />
+                <p className="text-xs font-semibold text-brand-900 leading-relaxed">
+                  <strong>Demo Sandbox Mode:</strong> This is a simulated checkout. You can enter any mock card details to test instant enrollment.
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
                     Card Number *
                   </label>
                   <input
@@ -204,14 +225,13 @@ const PaymentPage = () => {
                     required
                     value={formData.cardNumber}
                     onChange={handleInputChange}
-                    placeholder="1234 5678 9012 3456"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="4242 4242 4242 4242"
+                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all tracking-wider"
                   />
-                  <p className="mt-1 text-xs text-gray-500">Use any 16-digit number for testing</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
                     Cardholder Name *
                   </label>
                   <input
@@ -220,14 +240,14 @@ const PaymentPage = () => {
                     required
                     value={formData.cardName}
                     onChange={handleInputChange}
-                    placeholder="John Doe"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Full name as printed on card"
+                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
                       Expiry Date *
                     </label>
                     <input
@@ -237,13 +257,13 @@ const PaymentPage = () => {
                       value={formData.expiryDate}
                       onChange={handleInputChange}
                       placeholder="MM/YY"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      CVV *
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                      Security Code (CVV) *
                     </label>
                     <input
                       type="text"
@@ -252,7 +272,7 @@ const PaymentPage = () => {
                       value={formData.cvv}
                       onChange={handleInputChange}
                       placeholder="123"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
                     />
                   </div>
                 </div>
@@ -260,77 +280,77 @@ const PaymentPage = () => {
                 <button
                   type="submit"
                   disabled={processing}
-                  className="w-full py-4 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="w-full py-4 px-6 bg-brand-600 hover:bg-brand-500 text-white rounded-2xl font-bold text-base shadow-lg shadow-brand-500/30 transition-all duration-300 flex items-center justify-center gap-2 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:transform-none mt-6"
                 >
                   {processing ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                      Processing Payment...
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white mr-2"></div>
+                      Processing Enrollment...
                     </>
                   ) : (
                     <>
-                      <Lock className="h-5 w-5 mr-2" />
-                      Pay ${course.price}
+                      <Lock className="h-4 w-4" />
+                      Complete Enrollment • ${course.price}
                     </>
                   )}
                 </button>
 
-                <p className="text-xs text-center text-gray-500">
-                  By completing this purchase, you agree to our terms and conditions
+                <p className="text-xs text-center text-slate-400 font-medium pt-2">
+                  By confirming, you will be enrolled into the course immediately.
                 </p>
               </form>
             </div>
           </div>
 
-          {/* Order Summary */}
+          {/* Order Summary (Right Col) */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h3>
+            <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-200/80 sticky top-8">
+              <h3 className="text-lg font-bold text-slate-900 mb-5">Order Summary</h3>
               
-              <img
-                src={course.thumbnail_url || 'https://via.placeholder.com/400x300'}
-                alt={course.title}
-                className="w-full h-40 object-cover rounded-lg mb-4"
-              />
+              <div className="h-40 rounded-2xl overflow-hidden mb-4 bg-slate-900">
+                <img
+                  src={course.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'}
+                  alt={course.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
 
-              <h4 className="font-semibold text-gray-900 mb-2">{course.title}</h4>
-              <p className="text-sm text-gray-600 mb-4 line-clamp-2">{course.description}</p>
+              <h4 className="font-bold text-slate-900 text-base mb-1.5 leading-snug">{course.title}</h4>
+              <p className="text-xs text-slate-500 font-medium mb-6 line-clamp-2 leading-relaxed">{course.description}</p>
 
-              <div className="border-t border-gray-200 pt-4 mb-4">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Course Price</span>
-                  <span className="font-semibold text-gray-900">${course.price}</span>
+              <div className="border-t border-slate-100 pt-4 space-y-2.5 mb-6">
+                <div className="flex justify-between text-xs font-semibold text-slate-600">
+                  <span>Course Tuition</span>
+                  <span className="text-slate-900">${course.price}</span>
                 </div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Tax</span>
-                  <span className="font-semibold text-gray-900">$0.00</span>
+                <div className="flex justify-between text-xs font-semibold text-slate-600">
+                  <span>Platform & Processing Fee</span>
+                  <span className="text-emerald-600 font-bold">FREE</span>
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 pt-4">
+              <div className="border-t border-slate-100 pt-4 mb-6">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-gray-900">Total</span>
-                  <span className="text-2xl font-bold text-purple-600">${course.price}</span>
+                  <span className="text-sm font-bold text-slate-900">Total Due Today</span>
+                  <span className="text-2xl font-extrabold text-brand-600">${course.price}</span>
                 </div>
               </div>
 
-              <div className="mt-6 p-4 bg-green-50 rounded-lg">
-                <div className="flex items-start">
-                  <CheckCircle className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-green-800">
-                    <p className="font-semibold mb-1">What's included:</p>
-                    <ul className="space-y-1">
-                      <li>• Lifetime access to the course</li>
-                      <li>• Access on mobile and desktop</li>
-                      <li>• Certificate of completion</li>
-                    </ul>
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <div className="text-xs font-medium text-slate-600 space-y-1">
+                    <p className="font-bold text-slate-800">Your enrollment includes:</p>
+                    <p>• Lifetime 24/7 access</p>
+                    <p>• Completion certificate</p>
+                    <p>• Interactive practice modules</p>
                   </div>
                 </div>
-                </div>
+              </div>
             </div>
           </div>
         </div>
-        </div>
+      </div>
     </div>
   );
 };

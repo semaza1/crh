@@ -268,474 +268,256 @@ const DashboardPage = () => {
   };
 
   return (
-    
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-
-          {/* LOGO */}
-          <div className="flex items-center">
-            <img src={Logo} alt="CRH Logo" className="h-12 w-12" />
-            <span className="ml-2 text-xl font-bold text-gray-900">CRH</span>
+    <div className="min-h-screen bg-slate-50 font-sans flex text-slate-900">
+      
+      {/* Sidebar - Desktop */}
+      <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 fixed h-full z-40">
+        <div className="p-6 flex items-center gap-3">
+          <div className="bg-brand-600 p-2 rounded-xl">
+            <img src={Logo} alt="CRH Logo" className="h-6 w-6 filter brightness-0 invert" />
           </div>
+          <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">CRH LMS</span>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2">
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-2">Menu</div>
+          
+          <Link to="/user/dashboard" className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-brand-50 text-brand-700 font-medium transition-colors">
+            <Home className="h-5 w-5" />
+            Dashboard
+          </Link>
+          <Link to="/user/course/" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium transition-colors">
+            <BookOpen className="h-5 w-5" />
+            My Courses
+          </Link>
+          <Link to="/user/certificates/" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium transition-colors">
+            <Award className="h-5 w-5" />
+            Certificates
+          </Link>
+          
+          <div className="mt-8 mb-4 text-xs font-semibold text-slate-400 uppercase tracking-wider px-2">Settings</div>
+          <Link to="/user/profile/" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium transition-colors">
+            <UserIcon className="h-5 w-5" />
+            Profile
+          </Link>
+          
+          {isAdmin && (
+            <Link to="/admin/dashboard" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-purple-600 bg-purple-50 hover:bg-purple-100 font-medium transition-colors mt-4">
+              <Target className="h-5 w-5" />
+              Admin Panel
+            </Link>
+          )}
+        </div>
+        
+        <div className="p-4 border-t border-slate-100">
+          <button onClick={handleSignOut} className="flex items-center gap-3 px-3 py-2.5 w-full rounded-xl text-red-600 hover:bg-red-50 font-medium transition-colors">
+            <LogOut className="h-5 w-5" />
+            Logout
+          </button>
+        </div>
+      </aside>
 
-          {/* MOBILE MENU BUTTON */}
-          <div className="flex lg:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-gray-900 focus:outline-none"
-            >
+      {/* Mobile Header & Menu */}
+      <div className="lg:hidden fixed w-full top-0 bg-white border-b border-slate-200 z-50">
+        <div className="flex justify-between items-center px-4 h-16">
+          <div className="flex items-center gap-2">
+            <img src={Logo} alt="CRH" className="h-8 w-8" />
+            <span className="font-bold">CRH</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <NotificationBell />
+            <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-slate-600">
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
-
-          {/* LINKS (DESKTOP) */}
-          <div className="hidden lg:flex items-center space-x-4">
-            <Link
-              to="/user/dashboard"
-              className="text-blue-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium flex items-center"
-            >
-              <Home className="h-4 w-4 mr-1" />
-              Dashboard
-            </Link>
-
-            <Link
-              to="/user/course/"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Courses
-            </Link>
-
-            <Link
-              to="/user/certificates/"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
-            >
-              <Award className="h-4 w-4 mr-1" />
-              My Certificates
-            </Link>
-
-            <Link
-              to="/user/profile/"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
-            >
-              <UserIcon className="h-4 w-4 mr-1" />
-              Profile
-            </Link>
-
-            {isAdmin && (
-              <Link
-                to="/admin/dashboard"
-                className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700"
-              >
-                Admin
-              </Link>
-            )}
-
-            {user && <NotificationBell />}
-
-            <button
-              onClick={handleSignOut}
-              className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
-            >
-              <LogOut className="h-4 w-4 mr-1" />
-              Logout
-            </button>
-          </div>
         </div>
+        
+        {isOpen && (
+          <div className="bg-white border-b border-slate-200 absolute w-full animate-fade-in shadow-xl">
+            <div className="p-4 space-y-2">
+              <Link to="/user/dashboard" onClick={() => setIsOpen(false)} className="block px-4 py-3 rounded-xl bg-brand-50 text-brand-700 font-medium">Dashboard</Link>
+              <Link to="/user/course/" onClick={() => setIsOpen(false)} className="block px-4 py-3 rounded-xl text-slate-600 font-medium">Courses</Link>
+              <Link to="/user/profile/" onClick={() => setIsOpen(false)} className="block px-4 py-3 rounded-xl text-slate-600 font-medium">Profile</Link>
+              <button onClick={handleSignOut} className="w-full text-left px-4 py-3 rounded-xl text-red-600 font-medium">Logout</button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* MOBILE MENU DROPDOWN */}
-      {isOpen && (
-        <div className="lg:hidden bg-white shadow-sm animate-slide-down">
-          <div className="px-4 pt-2 pb-4 space-y-2">
-
-            <Link
-              to="/user/dashboard"
-              className="block text-blue-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium"
-              onClick={() => setIsOpen(false)}
-            >
-              Dashboard
-            </Link>
-
-            <Link
-              to="/user/course/"
-              className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-              onClick={() => setIsOpen(false)}
-            >
-              Courses
-            </Link>
-
-            <Link
-              to="/user/certificates/"
-              className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-              onClick={() => setIsOpen(false)}
-            >
-              My Certificates
-            </Link>
-
-            <Link
-              to="/user/profile/"
-              className="block text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-              onClick={() => setIsOpen(false)}
-            >
-              Profile
-            </Link>
-
-            {isAdmin && (
-              <Link
-                to="/admin/dashboard"
-                className="block bg-purple-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-purple-700"
-                onClick={() => setIsOpen(false)}
-              >
-                Admin
-              </Link>
-            )}
-
-            {user && <NotificationBell />}
-
-            <button
-              onClick={() => {
-                handleSignOut();
-                setIsOpen(false);
-              }}
-              className="block text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      )}
-    </nav>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">
-                {getGreeting()}, {userProfile?.name}!
-              </h1>
-              <p className="text-blue-100 mb-4">
-                Ready to continue your learning journey today?
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center bg-white bg-opacity-20 rounded-lg px-4 py-2">
-                  <Zap className="h-5 w-5 mr-2" />
-                  <span className="font-semibold">{stats.currentStreak} day streak</span>
-                </div>
-                <div className="flex items-center bg-white bg-opacity-20 rounded-lg px-4 py-2">
-                  <Target className="h-5 w-5 mr-2" />
-                  <span className="font-semibold">{stats.totalLearningHours}h learned</span>
-                </div>
-              </div>
-            </div>
-            <div className="hidden md:block">
-              <div className="w-32 h-32 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-                <GraduationCap className="h-16 w-16" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <BookOpen className="h-6 w-6 text-blue-600" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.totalEnrolled}</span>
-            </div>
-            <p className="text-sm text-gray-600">Enrolled Courses</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="bg-green-100 p-3 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.completed}</span>
-            </div>
-            <p className="text-sm text-gray-600">Completed</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="bg-orange-100 p-3 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-orange-600" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.inProgress}</span>
-            </div>
-            <p className="text-sm text-gray-600">In Progress</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="bg-purple-100 p-3 rounded-lg">
-                <Award className="h-6 w-6 text-purple-600" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.certificates}</span>
-            </div>
-            <p className="text-sm text-gray-600">Certificates Earned</p>
-          </div>
+      {/* Main Content Area */}
+      <main className="flex-1 lg:ml-64 pt-16 lg:pt-0">
         
-        </div>
+        {/* Desktop Header */}
+        <header className="hidden lg:flex items-center justify-between px-8 h-20 bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800">Welcome back, {userProfile?.name?.split(' ')[0]}! 👋</h2>
+            <p className="text-sm text-slate-500">Let's continue your learning journey.</p>
+          </div>
+          <div className="flex items-center gap-6">
+            <NotificationBell />
+            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-brand-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-md shadow-brand-500/30 ring-2 ring-white cursor-pointer transform hover:scale-105 transition-transform">
+              {userProfile?.name?.charAt(0) || 'U'}
+            </div>
+          </div>
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content Area */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Continue Learning */}
-            {enrollments.length > 0 && (
-              <div>
+        <div className="p-4 sm:p-8 space-y-8 max-w-7xl mx-auto">
+          
+          {/* Stats Overview */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {[
+              { label: 'Enrolled Courses', value: stats.totalEnrolled, icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50' },
+              { label: 'Completed', value: stats.completed, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
+              { label: 'In Progress', value: stats.inProgress, icon: TrendingUp, color: 'text-orange-600', bg: 'bg-orange-50' },
+              { label: 'Certificates', value: stats.certificates, icon: Award, color: 'text-purple-600', bg: 'bg-purple-50' },
+            ].map((stat, i) => (
+              <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${stat.bg}`}>
+                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                </div>
+                <div className="text-3xl font-bold text-slate-800 mb-1">{stat.value}</div>
+                <div className="text-sm font-medium text-slate-500">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Left Column: Courses */}
+            <div className="lg:col-span-2 space-y-8">
+              
+              {/* Continue Learning */}
+              {enrollments.length > 0 && (
+                <section>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-slate-800">Continue Learning</h3>
+                    <Link to="/user/course/" className="text-brand-600 font-semibold text-sm flex items-center hover:text-brand-700">
+                      View all <ArrowRight className="h-4 w-4 ml-1" />
+                    </Link>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {enrollments.slice(0, 4).map((enrollment) => (
+                      <Link key={enrollment.id} to={`/user/course/${enrollment.course_id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col">
+                        <div className="h-40 overflow-hidden relative">
+                          <img 
+                            src={enrollment.courses?.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80'} 
+                            alt={enrollment.courses?.title}
+                            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                          <div className="absolute bottom-3 left-4 right-4">
+                            <h4 className="text-white font-bold text-lg line-clamp-1">{enrollment.courses?.title}</h4>
+                          </div>
+                        </div>
+                        <div className="p-5 flex-1 flex flex-col">
+                          <div className="mb-4 flex-1">
+                            <div className="flex justify-between text-sm mb-2 font-medium">
+                              <span className="text-slate-600">Overall Progress</span>
+                              <span className="text-brand-600">{enrollment.progress || 0}%</span>
+                            </div>
+                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div className="h-full bg-brand-500 rounded-full transition-all duration-1000" style={{ width: `${enrollment.progress || 0}%` }}></div>
+                            </div>
+                          </div>
+                          <button className="w-full py-2.5 rounded-xl bg-slate-50 text-slate-800 font-semibold group-hover:bg-brand-50 group-hover:text-brand-600 transition-colors flex justify-center items-center gap-2">
+                            <PlayCircle className="h-5 w-5" /> Resume Course
+                          </button>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Recommended Courses */}
+              <section>
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Continue Learning</h2>
-                  <Link to="/user/course/" className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
-                    Browse All
-                    <ArrowRight className="h-4 w-4 ml-1" />
+                  <h3 className="text-xl font-bold text-slate-800">Recommended for You</h3>
+                </div>
+                
+                {availableCourses.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Target className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <p className="text-slate-500 font-medium">You've enrolled in all our top courses!</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {availableCourses.slice(0, 2).map((course) => (
+                      <Link key={course.id} to={`/user/course/${course.id}`} className="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all border border-slate-100 flex p-4 gap-4">
+                        <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 relative">
+                          <img src={course.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&q=80'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        </div>
+                        <div className="flex flex-col justify-center">
+                          <h4 className="font-bold text-slate-800 line-clamp-2 group-hover:text-brand-600 transition-colors">{course.title}</h4>
+                          <div className="flex items-center gap-3 mt-2">
+                            <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-md uppercase">{course.level}</span>
+                            <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                              <Clock className="h-3 w-3" /> {course.duration}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+
+            {/* Right Column: Activity & Motivation */}
+            <div className="space-y-6">
+              
+              {/* Daily Goal / Streak */}
+              <div className="bg-gradient-to-br from-brand-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl shadow-brand-500/20 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-20">
+                  <Zap className="h-32 w-32 -mr-8 -mt-8" />
+                </div>
+                <div className="relative z-10">
+                  <h3 className="font-bold text-lg mb-1">Learning Streak</h3>
+                  <div className="flex items-baseline gap-2 mb-4">
+                    <span className="text-5xl font-black">{stats.currentStreak}</span>
+                    <span className="text-brand-100 font-medium">Days</span>
+                  </div>
+                  <p className="text-brand-100 text-sm font-medium mb-6">You're on fire! Complete a lesson today to keep your streak alive.</p>
+                  <Link to="/user/course/" className="inline-block px-5 py-2.5 bg-white text-brand-700 rounded-xl font-bold shadow-sm hover:shadow-md transition-shadow">
+                    Learn Now
                   </Link>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {enrollments.slice(0, 4).map((enrollment) => (
-                    <Link
-                      key={enrollment.id}
-                      to={`/user/course/${enrollment.course_id}`}
-                      className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all group"
-                    >
-                      <div className="relative h-40 bg-gradient-to-r from-blue-500 to-purple-500">
-                        {enrollment.courses?.thumbnail_url ? (
-                          <img 
-                            src={enrollment.courses.thumbnail_url} 
-                            alt={enrollment.courses?.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <BookOpen className="h-12 w-12 text-white opacity-50" />
-                          </div>
-                        )}
-                        {enrollment.courses?.is_premium && (
-                          <span className="absolute top-3 right-3 bg-yellow-500 text-white text-xs font-semibold px-2 py-1 rounded">
-                            Premium
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-5">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-1">
-                          {enrollment.courses?.title || 'Untitled Course'}
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                          {enrollment.courses?.description || 'No description available'}
-                        </p>
-                        
-                        {/* Progress Bar */}
-                        <div className="mb-3">
-                          <div className="flex justify-between text-xs text-gray-600 mb-1">
-                            <span>Progress</span>
-                            <span className="font-semibold">{enrollment.progress || 0}%</span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-blue-600 h-2 rounded-full transition-all"
-                              style={{ width: `${enrollment.progress || 0}%` }}
-                            ></div>
-                          </div>
-                        </div>
-
-                        <button className="w-full py-2 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center justify-center">
-                          <PlayCircle className="h-4 w-4 mr-2" />
-                          Continue
-                        </button>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Available Courses */}
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Recommended for You</h2>
-                <Link to="/user/course/" className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
-                  Explore All
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Link>
               </div>
 
-              {availableCourses.length === 0 ? (
-                <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-                  <BookMarked className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-600">No new courses available</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {availableCourses.map((course) => (
-                    <Link
-                      key={course.id}
-                      to={`/user/course/${course.id}`}
-                      className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all group"
-                    >
-                      <div className="relative h-40 bg-gradient-to-r from-purple-500 to-pink-500">
-                        {course.thumbnail_url ? (
-                          <img 
-                            src={course.thumbnail_url} 
-                            alt={course.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <BookOpen className="h-12 w-12 text-white opacity-50" />
-                          </div>
-                        )}
-                        <div className="absolute top-3 right-3">
-                          <span className={`${
-                            course.is_premium 
-                              ? 'bg-yellow-500' 
-                              : 'bg-green-500'
-                          } text-white text-xs font-semibold px-2 py-1 rounded`}>
-                            {course.is_premium ? `$${course.price}` : 'Free'}
-                          </span>
+              {/* Recent Activity Timeline */}
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-brand-500" />
+                  Recent Activity
+                </h3>
+                
+                {recentActivity.length === 0 ? (
+                  <p className="text-slate-500 text-sm text-center py-4">No recent activity</p>
+                ) : (
+                  <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+                    {recentActivity.map((activity, i) => (
+                      <div key={activity.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                        <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-white z-10 ${
+                          activity.status === 'completed' ? 'bg-green-500' : 'bg-brand-500'
+                        } shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm`}>
+                          {activity.status === 'completed' ? <CheckCircle className="h-4 w-4 text-white" /> : <PlayCircle className="h-4 w-4 text-white" />}
+                        </div>
+                        <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                          <p className="text-sm font-bold text-slate-800 mb-1 line-clamp-1">{activity.lessons?.title}</p>
+                          <p className="text-xs font-medium text-slate-500 line-clamp-1">{activity.lessons?.courses?.title}</p>
                         </div>
                       </div>
-                      <div className="p-5">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-xs font-semibold text-gray-500 uppercase">{course.level}</span>
-                          <span className="text-xs text-gray-400">•</span>
-                          <span className="text-xs text-gray-500 flex items-center">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {course.duration}
-                          </span>
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-1">
-                          {course.title}
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                          {course.description}
-                        </p>
-                        <button className="w-full py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all">
-                          View Course
-                        </button>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Notifications */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Bell className="h-5 w-5 mr-2 text-purple-600" />
-                Notifications
-                {notifications.length > 0 && (
-                  <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                    {notifications.length}
-                  </span>
+                    ))}
+                  </div>
                 )}
-              </h3>
-              {notifications.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-4">No new notifications</p>
-              ) : (
-                <div className="space-y-3">
-                  {notifications.map((notif) => (
-                    <div key={notif.id} className="border-l-4 border-blue-500 pl-3 py-2 hover:bg-gray-50 rounded transition-colors">
-                      <p className="text-sm font-medium text-gray-900">{notif.subject}</p>
-                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">{notif.message}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {new Date(notif.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Recent Activity */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Calendar className="h-5 w-5 mr-2 text-blue-600" />
-                Recent Activity
-              </h3>
-              {recentActivity.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-4">No recent activity</p>
-              ) : (
-                <div className="space-y-3">
-                  {recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3">
-                      <div className={`mt-1 p-1.5 rounded-full ${
-                        activity.status === 'completed' ? 'bg-green-100' : 'bg-blue-100'
-                      }`}>
-                        {activity.status === 'completed' ? (
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <PlayCircle className="h-4 w-4 text-blue-600" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900 line-clamp-1">
-                          {activity.lessons?.title}
-                        </p>
-                        <p className="text-xs text-gray-500 line-clamp-1">
-                          {activity.lessons?.courses?.title}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {new Date(activity.last_accessed_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl shadow-sm p-6 text-white">
-              <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <Link
-                  to="/user/course/"
-                  className="block w-full py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg text-center font-medium transition-all"
-                >
-                  Browse Courses
-                </Link>
-                <Link
-                  to="/user/profile/"
-                  className="block w-full py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg text-center font-medium transition-all"
-                >
-                  Edit Profile
-                </Link>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <img src={Logo} alt="CRH Logo" className="h-12 w-12 rounded-full" />
-              <span className="ml-2 text-lg font-bold">Career Connect Hub</span>
-            </div>
-            <div className="flex gap-6 text-sm text-gray-400">
-              <Link to="/" className="hover:text-white transition-colors">Home</Link>
-              <Link to="/courses" className="hover:text-white transition-colors">Courses</Link>
-              <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-6 pt-6 text-center text-sm text-gray-400">
-            © {new Date().getFullYear()} Career Connect Hub. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      </main>
     </div>
   );
 };

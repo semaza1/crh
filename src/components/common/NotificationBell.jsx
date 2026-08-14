@@ -152,11 +152,11 @@ const NotificationBell = () => {
       {/* Bell Button */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="relative p-2 text-gray-700 hover:text-blue-600 rounded-lg transition-colors font-medium"
+        className="relative p-2 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-full transition-all focus:outline-none"
       >
-        <Bell className="h-4 w-4" />
+        <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-600 rounded-full">
+          <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full border-2 border-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -164,67 +164,69 @@ const NotificationBell = () => {
 
       {/* Dropdown */}
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+        <div className="absolute right-0 mt-3 w-80 sm:w-96 glass rounded-2xl shadow-2xl border border-white/40 z-50 animate-fade-in-up origin-top-right overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Notifications</h3>
+          <div className="flex items-center justify-between p-4 border-b border-slate-100/50 bg-white/50">
+            <h3 className="text-lg font-bold text-slate-800">Notifications</h3>
             <button
               onClick={() => setShowDropdown(false)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-white transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto bg-white/80">
             {loading ? (
               <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
               </div>
             ) : notifications.length === 0 ? (
               <div className="p-8 text-center">
-                <Bell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-600 text-sm">No notifications yet</p>
+                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Bell className="h-8 w-8 text-slate-300" />
+                </div>
+                <p className="text-slate-500 text-sm font-medium">You're all caught up!</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-slate-100/50">
                 {notifications.map((notification) => (
                   <Link
                     key={notification.id}
                     to="/notifications"
                     onClick={() => setShowDropdown(false)}
-                    className={`block p-4 hover:bg-gray-50 transition-colors ${
-                      !notification.is_read ? 'bg-purple-50' : ''
+                    className={`block p-4 hover:bg-slate-50 transition-colors ${
+                      !notification.is_read ? 'bg-brand-50/50' : ''
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       {/* Icon */}
-                      <div className={`p-2 rounded-lg ${getNotificationColor(notification.notification_type)} flex-shrink-0`}>
+                      <div className={`p-2.5 rounded-xl ${getNotificationColor(notification.notification_type)} flex-shrink-0 shadow-sm`}>
                         {getNotificationIcon(notification.notification_type)}
                       </div>
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-1">
-                          <p className={`text-sm font-semibold ${!notification.is_read ? 'text-gray-900' : 'text-gray-600'} line-clamp-1`}>
+                          <p className={`text-sm font-bold ${!notification.is_read ? 'text-slate-900' : 'text-slate-600'} line-clamp-1`}>
                             {notification.subject}
                           </p>
                           {!notification.is_read && (
-                            <span className="w-2 h-2 bg-purple-600 rounded-full ml-2 flex-shrink-0 mt-1"></span>
+                            <span className="w-2 h-2 bg-brand-500 rounded-full ml-2 flex-shrink-0 mt-1.5 shadow-sm shadow-brand-500/50"></span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-600 line-clamp-2 mb-2">
+                        <p className="text-xs text-slate-500 line-clamp-2 mb-2 font-medium">
                           {notification.message}
                         </p>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs font-semibold text-slate-400">
                             {formatTime(notification.created_at)}
                           </span>
                           {!notification.is_read && (
                             <button
                               onClick={(e) => markAsRead(notification.id, e)}
-                              className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1"
+                              className="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 bg-brand-50 px-2 py-1 rounded-md transition-colors"
                             >
                               <Check className="h-3 w-3" />
                               Mark read
@@ -241,11 +243,11 @@ const NotificationBell = () => {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-3 border-t border-gray-200">
+            <div className="p-3 border-t border-slate-100/50 bg-slate-50/80">
               <Link
                 to="/notifications"
                 onClick={() => setShowDropdown(false)}
-                className="block w-full text-center py-2 text-sm font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                className="block w-full text-center py-2.5 text-sm font-bold text-brand-600 hover:text-brand-700 hover:bg-white rounded-xl transition-all shadow-sm border border-transparent hover:border-slate-200"
               >
                 View All Notifications
               </Link>
