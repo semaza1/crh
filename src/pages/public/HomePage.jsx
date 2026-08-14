@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
-import { 
+import {
   ArrowRight, Play, Clock, Star, X, Menu,
   FileText, Mail, Phone, MapPin, Instagram,
   Linkedin, Twitter, Facebook, CheckCircle, Youtube
@@ -194,9 +194,7 @@ const HomePage = () => {
           <div className="flex justify-between items-center h-20">
             {/* Logo and Title */}
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-brand-600 to-purple-600 p-2 rounded-xl shadow-lg shadow-brand-500/30">
-                <img src={Logo} alt="CRH Logo" className="h-8 w-8 filter brightness-0 invert" />
-              </div>
+              <img src={Logo} alt="CRH Logo" className="h-10 w-10 rounded-full" />
               <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
                 Career Reach Hub
               </span>
@@ -312,11 +310,11 @@ const HomePage = () => {
               Succeed Together.
             </span>
           </h1>
-          
+
           <p className="text-lg md:text-xl mb-12 max-w-2xl mx-auto text-gray-600 animate-fade-in-up leading-relaxed" style={{ animationDelay: '200ms' }}>
             Access world-class education, expert mentorship, and career-defining resources tailored to launch you to the next level.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row justify-center gap-5 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
             <Link
               to="/signup"
@@ -374,7 +372,7 @@ const HomePage = () => {
       <section id="about" className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            
+
             {/* Text Content */}
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-100 text-brand-700 text-sm font-bold mb-6">
@@ -383,13 +381,13 @@ const HomePage = () => {
               <h2 className="text-4xl md:text-5xl font-playfair font-bold text-slate-900 mb-6 leading-tight">
                 Empowering the next generation of <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-purple-600">leaders</span>
               </h2>
-              
+
               <p className="text-lg text-slate-600 mb-6 leading-relaxed font-medium">
                 Founded in 2022, <span className="text-brand-600 font-bold">Career Reach Hub</span> is
-                dedicated to connecting ambitious individuals with life-changing opportunities. 
+                dedicated to connecting ambitious individuals with life-changing opportunities.
                 We believe everyone deserves access to quality mentorship and transformative career experiences.
               </p>
-              
+
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-6 mb-10 mt-12">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -408,7 +406,7 @@ const HomePage = () => {
                 <ArrowRight className="ml-2 w-5 h-5" />
               </button>
             </div>
-            
+
             {/* Image & Card */}
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-tr from-brand-500 to-purple-500 rounded-3xl transform rotate-3 scale-105 opacity-20 blur-lg"></div>
@@ -417,7 +415,7 @@ const HomePage = () => {
                 alt="Team collaboration"
                 className="relative rounded-3xl shadow-2xl border-4 border-white h-[500px] w-full object-cover"
               />
-              
+
               <div className="absolute -bottom-8 -left-8 glass p-6 rounded-2xl shadow-xl max-w-xs border border-white/40">
                 <div className="flex items-center mb-3">
                   <div className="bg-green-100 p-2 rounded-full mr-3">
@@ -473,9 +471,8 @@ const HomePage = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
                     <div className="absolute top-4 right-4">
-                      <span className={`px-4 py-1.5 rounded-full text-xs font-black shadow-sm ${
-                        course.is_premium ? 'bg-yellow-400 text-yellow-900' : 'bg-green-400 text-green-900'
-                      }`}>
+                      <span className={`px-4 py-1.5 rounded-full text-xs font-black shadow-sm ${course.is_premium ? 'bg-yellow-400 text-yellow-900' : 'bg-green-400 text-green-900'
+                        }`}>
                         {course.is_premium ? `$${course.price}` : 'FREE'}
                       </span>
                     </div>
