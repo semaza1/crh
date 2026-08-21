@@ -6,6 +6,7 @@ import {
   Send, Users, Filter, Mail, CreditCard, Award, Clock, Info, ArrowLeft,
   CheckCircle, Megaphone
 } from 'lucide-react';
+import notificationService from '../../services/notificationService';
 
 const ManageNotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
@@ -97,31 +98,23 @@ const ManageNotificationsPage = () => {
 
     try {
       if (formData.send_to_all) {
-        // Create a notification for every registered user
-        const notificationsToInsert = users.map(user => ({
-          user_id: user.id,
+        const userIds = users.map(user => user.id);
+        const { error } = await notificationService.sendBulkNotifications({
+          userIds,
           subject: formData.subject,
           message: formData.message,
-          notification_type: formData.notification_type,
-          is_read: false
-        }));
-
-        const { error } = await supabase
-          .from('email_notifications')
-          .insert(notificationsToInsert);
+          type: formData.notification_type,
+        });
 
         if (error) throw error;
         showMessage('success', `Broadcast sent to ${users.length} users successfully!`);
       } else {
-        const { error } = await supabase
-          .from('email_notifications')
-          .insert([{
-            user_id: formData.user_id,
-            subject: formData.subject,
-            message: formData.message,
-            notification_type: formData.notification_type,
-            is_read: false
-          }]);
+        const { error } = await notificationService.sendNotification({
+          userId: formData.user_id,
+          subject: formData.subject,
+          message: formData.message,
+          type: formData.notification_type,
+        });
 
         if (error) throw error;
         showMessage('success', 'Notification dispatched to student!');

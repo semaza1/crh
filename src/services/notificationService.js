@@ -8,53 +8,82 @@ class NotificationService {
   // Send email using Resend API
   async sendEmail({ to, subject, message }) {
     try {
-      const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
-      
-      if (!RESEND_API_KEY) {
-        console.warn('Resend API key not found. Email not sent.');
-        return { success: false, error: 'No API key' };
-      }
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f1f5f9; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table width="100%" max-width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); max-width: 600px; margin: 0 auto;">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">
+                        Career<span style="color: #38bdf8;">Connect</span>
+                      </h1>
+                      <p style="color: #94a3b8; margin: 10px 0 0; font-size: 14px; font-weight: 500;">Learning & Growth Hub</p>
+                    </td>
+                  </tr>
 
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${RESEND_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: 'CRH Learning <notifications@yourdomain.com>', // Change this to your verified domain
-          to: [to],
-          subject: subject,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-                <h1 style="color: white; margin: 0;">Career Connect Hub</h1>
-              </div>
-              <div style="padding: 30px; background-color: #f9fafb;">
-                <h2 style="color: #1f2937; margin-top: 0;">${subject}</h2>
-                <p style="color: #4b5563; line-height: 1.6; font-size: 16px;">
-                  ${message}
-                </p>
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-                  <a href="${window.location.origin}/notifications" 
-                     style="display: inline-block; background: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">
-                    View in Dashboard
-                  </a>
-                </div>
-              </div>
-              <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 14px;">
-                <p>This is an automated message from Career Connect Hub</p>
-                <p>© ${new Date().getFullYear()} Career Connect Hub. All rights reserved.</p>
-              </div>
-            </div>
-          `
-        })
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      <h2 style="color: #0f172a; margin: 0 0 20px; font-size: 22px; font-weight: 700; line-height: 1.3;">
+                        ${subject}
+                      </h2>
+                      <p style="color: #475569; margin: 0 0 30px; font-size: 16px; line-height: 1.6;">
+                        ${message.replace(/\n/g, '<br>')}
+                      </p>
+                      
+                      <!-- Call to Action -->
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td align="center">
+                            <a href="${window.location.origin}/notifications" 
+                               style="display: inline-block; background-color: #0284c7; background: linear-gradient(to right, #0284c7, #0369a1); color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);">
+                              View Dashboard
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- Footer -->
+                  <tr>
+                    <td style="padding: 30px 40px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; text-align: center;">
+                      <p style="color: #64748b; margin: 0; font-size: 13px; line-height: 1.5; font-weight: 500;">
+                        This is an automated message from Career Connect Hub.<br>
+                        © ${new Date().getFullYear()} Career Connect Hub. All rights reserved.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `;
+
+      console.log(`[NotificationService] Attempting to invoke Edge Function 'send-email' for: ${to}`);
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to,
+          subject,
+          html: htmlContent
+        }
       });
+      console.log(`[NotificationService] Edge Function response:`, { data, error });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to send email');
+      if (error) {
+        throw new Error(error.message || 'Failed to send email');
       }
 
       return { success: true, data };
