@@ -1,7 +1,7 @@
 // FILE: src/components/common/NotificationBell.jsx
 // PURPOSE: Show notification bell with unread count in navbar
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
@@ -41,7 +41,7 @@ const NotificationBell = () => {
         subscription.unsubscribe();
       };
     }
-  }, [user]);
+  }, [user, fetchNotifications]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -54,7 +54,7 @@ const NotificationBell = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -74,7 +74,7 @@ const NotificationBell = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const markAsRead = async (notificationId, e) => {
     e.preventDefault();
